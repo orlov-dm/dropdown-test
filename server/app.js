@@ -1,18 +1,14 @@
 const express = require('express');
 const path = require('path');
+const data = require('./data');
 
-//const generateTestData = require('./test_data');
-
-const distPath = path.join(__dirname, '/../dist');
 const app = express();
-//app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
-//app.use(express.static(__dirname + '../public'));
-//app.set('views', distPath);
 app.get('/', function(req, res) {
     res.render('index', { data: JSON.stringify('The index page!')});
 });
+const distPath = path.join(__dirname, '/../dist');
 app.use(express.static(distPath));
 
 

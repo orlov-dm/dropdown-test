@@ -27,9 +27,13 @@
     "build": "webpack",
     "watch": "webpack --watch",
     "server": "nodemon server/app.js",
-    "dev": "yarn build && yarn server"
+    "dev": "yarn build && yarn server",
+    "debug": "node --nolazy --inspect-brk=8888 server/app.js"
   },
   "dependencies": {
+    "@dicebear/avatars": "^2.0.4",
+    "@dicebear/avatars-female-sprites": "^1.0.4",
+    "@dicebear/avatars-male-sprites": "^1.0.4",
     "concurrently": "^4.0.1",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
