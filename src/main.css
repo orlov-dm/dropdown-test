@@ -1,0 +1,10 @@
+
+body {
+  color: #1d
+}
+
+#root {
+  width: 100px;
+  height: 100px;
+  background-color: yellow;
+}
