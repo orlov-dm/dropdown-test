@@ -1,12 +1,14 @@
 const express = require('express');
 const path = require('path');
-const data = require('./data');
+const Core = require('./Core');
 
 const app = express();
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.get('/', function(req, res) {
-    res.render('index', { data: JSON.stringify('The index page!')});
+    Core.getClientData().then( data => {
+        res.render('index', { data });
+    });
 });
 const distPath = path.join(__dirname, '/../dist');
 app.use(express.static(distPath));
