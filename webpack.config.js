@@ -1,7 +1,5 @@
 const path = require('path');
 const postcssPresetEnv = require('postcss-preset-env');
-const LiveReloadPlugin = require('webpack-livereload-plugin');
- 
 
 module.exports = {
   entry: './src/index.js',
@@ -10,28 +8,37 @@ module.exports = {
     path: path.resolve(__dirname, 'dist')
   },
   module: {
-  rules: [
-    {
-      test: /\.m?js$/,
-      exclude: /(node_modules|bower_components)/,
-      use: {
-        loader: 'babel-loader',
-        options: {
-          presets: ['@babel/preset-env']
+    rules: [
+      {
+        test: /\.m?js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
         }
-      }
-    },
-    {
+      },
+      {
         test: /\.css$/,
         use: [
-          { loader: 'style-loader' },
-          { loader: 'css-loader', options: { importLoaders: 1 } },
+          { 
+            loader: 'style-loader' 
+          },
+          { 
+            loader: 'css-loader',
+            options:
+            {
+              importLoaders: 1
+            }
+          },
           'postcss-loader'
         ]
-      }    
-  ]  
+      }
+    ]
   },
-  plugins: [
-    new LiveReloadPlugin()
-  ]
+  watch: true,
+  watchOptions: {
+    aggregateTimeout: 300 // The default
+  }
 };
