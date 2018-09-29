@@ -7,6 +7,7 @@ module.exports = {
     filename: 'main.js',
     path: path.resolve(__dirname, 'dist')
   },
+  mode: 'development',
   module: {
     rules: [
       {
@@ -40,5 +41,6 @@ module.exports = {
   watch: true,
   watchOptions: {
     aggregateTimeout: 300 // The default
-  }
+  },
+  devtool: "source-map"
 };
