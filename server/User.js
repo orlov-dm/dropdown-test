@@ -1,22 +1,27 @@
-
+const Constants = require('./constants');
 class User {
-    constructor({
-        id,
-        name,
-        surname,
-        workplace,
-        avatarUrl,
-        userUrl,
-        gender,
-    }) {
-        this.id = id;
-        this.name = name;
-        this.surname = surname;
-        this.workplace = workplace;
-        this.avatarUrl = avatarUrl;
-        this.userUrl = userUrl;
-        this.gender = gender;
-    }
+  constructor({
+    userURL,
+    ...data
+  }) {
+    this.clientData = data;
+    this.userURL = userURL;
+  }
+
+  get clientData() {
+    return this.clientData;
+  }
+
+  set clientData(data) {
+    this.data = data;
+  }
+
+  get fullData() {
+    return {
+      ...this.clientData,
+      userURL: this.userURL
+    };
+  }
 }
 
 module.exports = User;
