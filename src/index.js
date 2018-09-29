@@ -1,5 +1,6 @@
 import "@babel/polyfill";
 import Dropdown from './Dropdown';
+import 'normalize.css';
 import './styles/main.css';
 
 import Avatars from '@dicebear/avatars';
