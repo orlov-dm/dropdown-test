@@ -1,8 +1,19 @@
 const Constants = require('./constants');
 const User = require('./User');
+const Avatars = require('@dicebear/avatars').default;
+const MaleSprites = require('@dicebear/avatars-male-sprites').default;
+const FemaleSprites = require('@dicebear/avatars-female-sprites').default;
+const svgson = require('svgson-next').default;
+
+
 
 const GENDER_MALE = 0;
 const GENDER_FEMALE = 1;
+
+const avatars = {
+  [GENDER_MALE]: (new Avatars(MaleSprites)),
+  [GENDER_FEMALE]: (new Avatars(FemaleSprites))
+};
 
 const dictionaries = {};
 
@@ -10,7 +21,7 @@ dictionaries[Constants.USER_FIELD_NAME] = {
   [GENDER_MALE]: [
     'Иван', 'Пётр', 'Александр',
     'Анатолий', 'Алексей', 'Максим',
-    'Григорий', 'Ярослав', 
+    'Григорий', 'Ярослав',
   ],
   [GENDER_FEMALE]: [
     'Алина', 'Анастасия', 'Евгения',
@@ -20,11 +31,11 @@ dictionaries[Constants.USER_FIELD_NAME] = {
 };
 
 dictionaries[Constants.USER_FIELD_SURNAME] = [
-    'Иванов', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев',
-    'Петров', 'Соколов', 'Михайлов', 'Новиков', 'Фёдоров',
-    'Морозов', 'Волков', 'Алексеев', 'Лебедев', 'Семёнов',
-    'Егоров', 'Павлов', 'Козлов', 'Степанов', 'Николаев',
-    'Орлов', 'Андреев', 'Макаров', 'Никитин', 'Захаров',
+  'Иванов', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев',
+  'Петров', 'Соколов', 'Михайлов', 'Новиков', 'Фёдоров',
+  'Морозов', 'Волков', 'Алексеев', 'Лебедев', 'Семёнов',
+  'Егоров', 'Павлов', 'Козлов', 'Степанов', 'Николаев',
+  'Орлов', 'Андреев', 'Макаров', 'Никитин', 'Захаров',
 ];
 
 dictionaries[Constants.USER_FIELD_WORKPLACE] = [
@@ -57,44 +68,57 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generateTestUser(i) {
+async function getAvatar(id, gender) {
+  // create svg and encode to json str
+  const avatar = await svgson(avatars[gender].create(id));
+  //console.log(avatar);
+  return avatar;
+}
+
+async function generateTestUser(i) {
   const gender = getRandomInt(0, 1);
+  const avatar = await getAvatar(i, gender);
   const userValues = {
     [Constants.USER_FIELD_ID]: i,
     [Constants.USER_FIELD_GENDER]: gender,
+    [Constants.USER_FIELD_AVATAR_URL]: avatar
   };
-  for(const field of Constants.USER_FIELDS) {
-    if(field === Constants.USER_FIELD_ID ||
-       field === Constants.USER_FIELD_GENDER ||
-       field === Constants.USER_FIELD_AVATAR_URL) {    
+  if(i === 1) {
+    console.log(i, userValues);
+  }
+  for (const field of Constants.USER_FIELDS) {
+    if (field === Constants.USER_FIELD_ID ||
+      field === Constants.USER_FIELD_GENDER ||
+      field === Constants.USER_FIELD_AVATAR_URL) {
       continue;
     }
     let value = null;
-    if(dictionaries.hasOwnProperty(field)) {
-      const dictionary = field === Constants.USER_FIELD_NAME ? 
+    if (dictionaries.hasOwnProperty(field)) {
+      const dictionary = field === Constants.USER_FIELD_NAME ?
         dictionaries[field][gender] : dictionaries[field];
       const valueIndex = getRandomInt(0, dictionary.length - 1);
       value = dictionary[valueIndex];
-      if(field === Constants.USER_FIELD_SURNAME && 
-          gender === GENDER_FEMALE) {
-          value += 'а'; // Add female ending;
+      if (field === Constants.USER_FIELD_SURNAME &&
+        gender === GENDER_FEMALE) {
+        value += 'а'; // Add female ending;
       }
     } else {
-      if(field === Constants.USER_FIELD_USER_URL) {
+      if (field === Constants.USER_FIELD_USER_URL) {
         value = `id${i}`;
       }
     }
-    userValues[field] = value;    
+    userValues[field] = value;
   }
-  
+
   return new User(userValues);
 }
 
-function generateTestData(count = 10000) {
+async function generateTestData(count = 10000) {
   const data = [];
   let i = 0;
-  while(i < count) {
-    data.push(generateTestUser(i++));    
+  while (i < count) {
+    const user = await generateTestUser(++i);
+    data.push(user);
   }
   return data;
 };
