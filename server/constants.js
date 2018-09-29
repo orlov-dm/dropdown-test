@@ -16,4 +16,4 @@ module.exports.USER_FIELDS = [
     module.exports.USER_FIELD_AVATAR_URL,
     module.exports.USER_FIELD_USER_URL,
     module.exports.USER_FIELD_GENDER,
-]
+];
