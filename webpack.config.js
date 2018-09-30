@@ -1,5 +1,6 @@
 const path = require('path');
 const postcssPresetEnv = require('postcss-preset-env');
+const postcssCustomProperties = require('postcss-custom-properties');
 
 module.exports = {
   entry: './src/index.js',
@@ -33,7 +34,15 @@ module.exports = {
               importLoaders: 1
             }
           },
-          'postcss-loader'
+          { 
+            loader: 'postcss-loader', options: {
+              ident: 'postcss',
+              plugins: () => [
+                postcssPresetEnv(/* pluginOptions */),
+                postcssCustomProperties(/* pluginOptions */),                
+              ]
+            } 
+          }
         ]
       }
     ]
@@ -42,5 +51,7 @@ module.exports = {
   watchOptions: {
     aggregateTimeout: 300 // The default
   },
-  devtool: "source-map"
+  devtool: "source-map",
+  /*plugins: [
+  ]*/
 };
