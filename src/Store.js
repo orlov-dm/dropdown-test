@@ -13,7 +13,7 @@ class Store {
   }  
 
   getOptions(field) {
-    if(!this.props.hasOwnProperties(field)) {
+    if(!this.props.hasOwnProperty(field)) {
       return null;
     }
     return this.props[field];
@@ -29,15 +29,15 @@ class Store {
   }
 
   getRange(startIndex) {
-    const { data } = this.props;
-    if ((startIndex + this.packCount - 1) >= data.length) {
+    const { data, packCount } = this.props;
+    if ((startIndex + packCount - 1) >= data.length) {
       this.fetch();
       return;
     }
     return {
       [Symbol.iterator]: () => {
         let i = startIndex;
-        const endIndex = startIndex + this.packCount;
+        const endIndex = startIndex + packCount;
         return {
           next() {
             if (i < endIndex) {

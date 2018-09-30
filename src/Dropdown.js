@@ -58,7 +58,9 @@ class Dropdown {
         label: 'Добавить',
         icon: plusIcon,
         callback: event => {
-          this.toggleAdd(false);          
+          event.stopPropagation();
+          this.toggleAdd(false);
+          showElement(this.datalistRef);
         }
       });
       this.inputContainerRef.insertBefore(addInfo, this.inputRef);
@@ -71,8 +73,8 @@ class Dropdown {
   }
 
   renderData() {
-    const { id, store } = this.props;
-    if(!this.datalistRef) {      
+    if(!this.datalistRef) {
+      const { id } = this.props;
       const datalist = document.createElement('div');
       datalist.setAttribute('id', `${id}_data`);
       datalist.classList.add('data');
@@ -83,16 +85,17 @@ class Dropdown {
       this.sentinel = document.createElement('div');
       this.sentinel.setAttribute('id', `${id}_sentinel`);
     }
-        
-    if(store) {      
-      let index = this.datalistRef.childElementCount;
-      for(const value of store.getRange(index)) {
-        if(index === store.getOptions('packCount')/2) {
-          datalist.appendChild(this.sentinel);
-        }
-        datalist.appendChild(this.renderUser(index++, value));        
+    const { store } = this.props;    
+    if(!store) {
+      return;
+    }
+    let index = this.datalistRef.childElementCount;
+    for(const value of store.getRange(index)) {
+      if(index === store.getOptions('packCount')/2) {
+        this.datalistRef.appendChild(this.sentinel);
       }
-    }    
+      this.datalistRef.appendChild(this.renderUser(index++, value));        
+    }        
   }
 
   renderUser(index, { data }) {
@@ -106,8 +109,8 @@ class Dropdown {
     avatarNode.classList.add('avatar');
     avatarNode.innerHTML = avatarUrl;
 
-    const infoNode = document.createElement('div');    
-    infoNode.classList.add('info');
+    const userInfoNode = document.createElement('div');    
+    userInfoNode.classList.add('user-info');
     
     
     const fullNameNode = document.createElement('span');
@@ -118,10 +121,10 @@ class Dropdown {
     workplaceNode.classList.add('workplace');
     workplaceNode.innerHTML =  `${workplace}`;
 
-    infoNode.appendChild(fullNameNode);
-    infoNode.appendChild(workplaceNode);
+    userInfoNode.appendChild(fullNameNode);
+    userInfoNode.appendChild(workplaceNode);
     userContainer.appendChild(avatarNode);
-    userContainer.appendChild(infoNode);
+    userContainer.appendChild(userInfoNode);
     return userContainer;
   }
 
@@ -169,6 +172,7 @@ class Dropdown {
   subscribe() {
     const { multiple } = this.props;
     document.addEventListener('click', event => {
+      event.stopPropagation();
       this.toggleAdd(true);
       hideElement(this.datalistRef);
     });
@@ -180,6 +184,7 @@ class Dropdown {
       showElement(this.datalistRef);
     });
     this.datalistRef.addEventListener('click', event => {
+      event.stopPropagation();
       let { target } = event;      
       target = target.closest('.row');
       if(target) {
@@ -187,6 +192,7 @@ class Dropdown {
         const index = target.getAttribute('index');
         this.select(index);        
       }
+      hideElement(this.datalistRef);
     });
 
     this.observer = new IntersectionObserver(entries => {      
@@ -211,9 +217,10 @@ class Dropdown {
         event.stopPropagation();
         info.remove();
         this.state.selected.delete(index);
-        hideElement(this.datalistRef.childNodes[index]);        
+        showElement(this.datalistRef.childNodes[index]);        
         
-        this.toggleAdd(true);        
+        this.toggleAdd(true);
+        hideElement(this.datalistRef);
         this.refresh();
       }
     })    
@@ -227,11 +234,16 @@ class Dropdown {
   }
 
   toggleAdd(show = true) {
+    const { multiple } = this.props;
     if(show && !this.inputRef.value.length && this.state.selected.size) {
-      showElement(this.addInfoRef);
+      if(multiple) {
+        showElement(this.addInfoRef);
+      }
       hideElement(this.inputRef);
     } else {
-      hideElement(this.addInfoRef);
+      if(multiple) {
+        hideElement(this.addInfoRef);
+      }
       showElement(this.inputRef);
       this.inputRef.focus();
     }
