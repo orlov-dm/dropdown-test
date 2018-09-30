@@ -1,11 +1,13 @@
 import "@babel/polyfill";
 import runPolyfils from './polyfills';
 runPolyfils();
-
-import 'normalize.css';
 import { stringify } from 'svgson-next';
+import 'normalize.css';
+
 import Dropdown from './Dropdown';
+import Store from './Store';
 import './styles/main.css';
+
 
 
 function getData() {
@@ -22,18 +24,20 @@ function getData() {
     return data;
 };
 
+const packCount = 20;
 const data = getData();
+const store = new Store({data, packCount});
 
 (new Dropdown({
     id: 'dropdown',
-    data,
+    store,
     placeholder: 'Введите имя друга',
-    multiple: true
+    multiple: true,
 })).init();
 
 (new Dropdown({
     id: 'dropdown_single',
-    data,
+    store,
     placeholder: 'Введите имя друга',
     multiple: false
 })).init();

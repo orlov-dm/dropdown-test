@@ -15,7 +15,7 @@ class Dropdown {
 
     this.inputContainerRef = null;
     this.inputRef = null;
-    this.datalistRef = null;    
+    this.datalistRef = null;
   }
 
   init() {
@@ -30,7 +30,7 @@ class Dropdown {
       return;
     }
     const container = document.createDocumentFragment();
-    const { id, data, placeholder, multiple } = this.props;
+    const { id, store, placeholder, multiple } = this.props;
 
     const inputContainer = document.createElement('div');
     inputContainer.classList.add('input-container');
@@ -41,28 +41,15 @@ class Dropdown {
     if(placeholder) {
       input.setAttribute('placeholder', placeholder);
     }
-    const datalist = document.createElement('div');
-    datalist.setAttribute('id', `${id}_data`);
-    datalist.classList.add('data');
-    datalist.classList.add('hidden');
-        
-    if(data) {
-      data.slice(0, 20).forEach((value, index) => {
-        datalist.appendChild(this.renderUser(index, value));
-      });
-    }
+    
 
     inputContainer.appendChild(input);
     container.appendChild(inputContainer);
-    container.appendChild(datalist);
-    
-    this.node.appendChild(container);
-    this.node.classList.add('dropdown');
-
 
     this.inputContainerRef = inputContainer;
     this.inputRef = input;
-    this.datalistRef = datalist;
+
+    this.renderData();
     
     if(multiple) {
       const addInfo = this.renderInfo({
@@ -78,6 +65,34 @@ class Dropdown {
       this.addInfoRef = addInfo;
       hideElement(addInfo);
     }
+
+    this.node.appendChild(container);
+    this.node.classList.add('dropdown');
+  }
+
+  renderData() {
+    const { id, store } = this.props;
+    if(!this.datalistRef) {      
+      const datalist = document.createElement('div');
+      datalist.setAttribute('id', `${id}_data`);
+      datalist.classList.add('data');
+      datalist.classList.add('hidden');
+      this.inputContainerRef.appendChild(datalist);
+      this.datalistRef = datalist;
+
+      this.sentinel = document.createElement('div');
+      this.sentinel.setAttribute('id', `${id}_sentinel`);
+    }
+        
+    if(store) {      
+      let index = this.datalistRef.childElementCount;
+      for(const value of store.getRange(index)) {
+        if(index === store.getOptions('packCount')/2) {
+          datalist.appendChild(this.sentinel);
+        }
+        datalist.appendChild(this.renderUser(index++, value));        
+      }
+    }    
   }
 
   renderUser(index, { data }) {
@@ -173,11 +188,19 @@ class Dropdown {
         this.select(index);        
       }
     });
+
+    this.observer = new IntersectionObserver(entries => {      
+      if (entries[0].intersectionRatio <= 0) {
+        return;
+      }
+      this.renderData();
+    });
+    this.observer.observe(this.sentinel);
   }
 
   select(index) {
-    const { data, multiple } = this.props;
-    const user = data[index];
+    const { store, multiple } = this.props;
+    const user = store.get(index);
     const label = `${user.data.name} ${user.data.surname}`;
     const info = this.renderInfo({
       type: 'selected',
