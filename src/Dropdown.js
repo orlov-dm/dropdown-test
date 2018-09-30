@@ -152,13 +152,17 @@ class Dropdown {
   }
 
   subscribe() {
+    const { multiple } = this.props;
     document.addEventListener('click', event => {
       this.toggleAdd(true);
       hideElement(this.datalistRef);
     });
     this.inputContainerRef.addEventListener('click', event => {
-      toggleElement(this.datalistRef);
       event.stopPropagation();
+      if(!multiple && this.state.selected.size) {
+        return;
+      }
+      showElement(this.datalistRef);
     });
     this.datalistRef.addEventListener('click', event => {
       let { target } = event;      

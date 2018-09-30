@@ -30,3 +30,10 @@ const data = getData();
     placeholder: 'Введите имя друга',
     multiple: true
 })).init();
+
+(new Dropdown({
+    id: 'dropdown_single',
+    data,
+    placeholder: 'Введите имя друга',
+    multiple: false
+})).init();

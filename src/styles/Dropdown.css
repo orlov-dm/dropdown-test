@@ -79,6 +79,8 @@
     border-top: 0;
     max-height: 20em;
     overflow-y: auto;
+    z-index: 1000;
+    background-color: var(--background-color);
 }
 
 .dropdown .data > * {
