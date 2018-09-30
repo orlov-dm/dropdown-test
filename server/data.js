@@ -83,9 +83,6 @@ async function generateTestUser(i) {
     [Constants.USER_FIELD_GENDER]: gender,
     [Constants.USER_FIELD_AVATAR_URL]: avatar
   };
-  if(i === 1) {
-    console.log(i, userValues);
-  }
   for (const field of Constants.USER_FIELDS) {
     if (field === Constants.USER_FIELD_ID ||
       field === Constants.USER_FIELD_GENDER ||

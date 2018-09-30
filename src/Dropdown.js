@@ -1,13 +1,16 @@
 import './styles/Dropdown.css';
+import crossIcon from './images/cross.svg';
+import plusIcon from './images/plus.svg';
+import { showElement, hideElement, toggleElement } from './common';
 
 class Dropdown {
   constructor(props) {
-    const { id, node = null, placeholder = null } = props;
+    const { id, node = null } = props;
     this.props = props;
     
     this.node = node != null ? node : document.getElementById(id);
     this.state = {
-      'selected': [],      
+      'selected': new Set(),
     };
 
     this.inputContainerRef = null;
@@ -27,7 +30,7 @@ class Dropdown {
       return;
     }
     const container = document.createDocumentFragment();
-    const { id, data, placeholder } = this.props;
+    const { id, data, placeholder, multiple } = this.props;
 
     const inputContainer = document.createElement('div');
     inputContainer.classList.add('input-container');
@@ -59,7 +62,22 @@ class Dropdown {
 
     this.inputContainerRef = inputContainer;
     this.inputRef = input;
-    this.datalistRef = datalist;    
+    this.datalistRef = datalist;
+    
+    if(multiple) {
+      const addInfo = this.renderInfo({
+        type: 'add',
+        action: 'add',
+        label: 'Добавить',
+        icon: plusIcon,
+        callback: event => {
+          this.toggleAdd(false);          
+        }
+      });
+      this.inputContainerRef.insertBefore(addInfo, this.inputRef);
+      this.addInfoRef = addInfo;
+      hideElement(addInfo);
+    }
   }
 
   renderUser(index, { data }) {
@@ -92,47 +110,115 @@ class Dropdown {
     return userContainer;
   }
 
+  renderInfo({
+    type,
+    label = null,
+    callback = null,
+    action = null,
+    icon = null,
+    actionCallback = null
+  }) {
+    if(type == null) {
+      console.error('Type is missing');
+      return;
+    }
+    const infoNode = document.createElement('div');
+    infoNode.classList.add('info');
+    infoNode.classList.add(type);
+
+    if(label) {
+      const labelNode = document.createElement('span'); 
+      labelNode.innerHTML = label;
+      infoNode.appendChild(labelNode);
+    }
+
+    if(callback != null) {
+      infoNode.addEventListener('click', callback);
+    }
+
+    if(action != null) {
+      const actionNode = document.createElement('i');
+      actionNode.classList.add('action');
+      actionNode.classList.add(action);
+      actionNode.classList.add('icon');
+      actionNode.innerHTML = icon;
+
+      if(actionCallback != null) {
+        actionNode.addEventListener('click', actionCallback);
+      }
+      infoNode.appendChild(actionNode);
+    }
+    return infoNode;
+  }
+
   subscribe() {
     document.addEventListener('click', event => {
-      this.datalistRef.classList.add('hidden');
-      //event.stopPropagation();
+      this.toggleAdd(true);
+      hideElement(this.datalistRef);
     });
     this.inputContainerRef.addEventListener('click', event => {
-      this.datalistRef.classList.toggle('hidden');
+      toggleElement(this.datalistRef);
       event.stopPropagation();
-      //this.datalistRef.classList.toggle('visible');      
     });
     this.datalistRef.addEventListener('click', event => {
-      let { target } = event;
-      console.dir(target);
-      while(!target.classList.contains('row') && !target.classList.contains('data')) {        
-        target = target.parentElement;
-        console.log(target);
-      }
-      if(target.classList.contains('row')) {
+      let { target } = event;      
+      target = target.closest('.row');
+      if(target) {
         // found
         const index = target.getAttribute('index');
-        this.select(index);
+        this.select(index);        
       }
     });
   }
 
   select(index) {
-    const selectedNode = document.createElement('span');
-    selectedNode.classList.add('selected');
-    const { data } = this.props;
+    const { data, multiple } = this.props;
     const user = data[index];
-    selectedNode.innerHTML = `${user.data.name} ${user.data.surname}`;
-    this.inputContainerRef.insertBefore(selectedNode, this.inputRef);
+    const label = `${user.data.name} ${user.data.surname}`;
+    const info = this.renderInfo({
+      type: 'selected',
+      action: 'remove',
+      icon: crossIcon,
+      label,      
+      actionCallback: event => {
+        event.stopPropagation();
+        info.remove();
+        this.state.selected.delete(index);
+        hideElement(this.datalistRef.childNodes[index]);        
+        
+        this.toggleAdd(true);        
+        this.refresh();
+      }
+    })    
 
-    this.datalistRef.childNodes[index].style.display = 'none';
-    this.state.selected.push(index);
+    const target = multiple ? this.addInfoRef : this.inputRef;
+    this.inputContainerRef.insertBefore(info, target);
+    hideElement(this.datalistRef.childNodes[index]);
+    this.state.selected.add(index);
+    this.toggleAdd(true);
+    this.refresh();
+  }
+
+  toggleAdd(show = true) {
+    if(show && !this.inputRef.value.length && this.state.selected.size) {
+      showElement(this.addInfoRef);
+      hideElement(this.inputRef);
+    } else {
+      hideElement(this.addInfoRef);
+      showElement(this.inputRef);
+      this.inputRef.focus();
+    }
     this.refresh();
   }
 
   refresh() {
-    console.log(this.inputContainerRef.offsetHeight);
-    this.datalistRef.style.top = `${this.inputContainerRef.offsetHeight}px`;
+    if(this.timerID) {
+      clearTimeout(this.timerID);
+    }    
+    this.timerID = setTimeout(() => {
+      this.datalistRef.style.top = `${this.inputContainerRef.offsetHeight}px`;
+      this.timerID = null;
+    }, 0);
   }
 }
 

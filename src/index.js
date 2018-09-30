@@ -27,5 +27,6 @@ const data = getData();
 (new Dropdown({
     id: 'dropdown',
     data,
-    placeholder: 'Введите имя друга'
+    placeholder: 'Введите имя друга',
+    multiple: true
 })).init();

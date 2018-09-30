@@ -7,22 +7,58 @@
     min-height: 2em;
     width: 30em;
     border: 1px solid var(--border-color);
-    background-color: white;
+    background-color: var(--light-secondary-color);
     display: flex;
     flex-wrap: wrap;
 }
 
-.dropdown .input-container .selected {
+.dropdown .input-container .info {
     background-color: var(--main-color);
-    color: white;
+    color: var(--light-secondary-color);
     border: 1px solid transparent;
     border-radius: 3px;
     margin: 2px;
     white-space: nowrap;
-    display: inline-block; 
+    display: flex; 
     vertical-align: middle; 
     line-height: normal;
     padding: 4px;
+
+    line-height: 1.1;
+}
+
+.dropdown .input-container .info.add {
+    background-color: var(--secondary-color);
+    color: var(--main-color);
+    cursor: pointer;
+}
+
+.dropdown .input-container .info .action {
+    border: none;
+    background: none;
+    color: var(--light-secondary-color);
+    padding: 0;
+    cursor: pointer;
+}
+
+.dropdown .input-container .info > :not(:last-child) {
+    margin-right: 0.5em;
+}
+
+.dropdown .input-container .info .action svg path {
+    fill: var(--secondary-color);
+}
+
+.dropdown .input-container .selected .action:hover svg path {
+    fill: var(--light-secondary-color);
+}
+
+.dropdown .input-container .info .action.add svg path {
+    fill: var(--light-main-color);
+}
+
+.dropdown .input-container .info .action.add:hover svg path {
+    fill: var(--main-color);
 }
 
 .dropdown .input-container .input {

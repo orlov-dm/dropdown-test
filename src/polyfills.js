@@ -1,5 +1,6 @@
 // from:https://github.com/jserz/js_piece/blob/master/DOM/ChildNode/remove()/remove().md
 function runPolyfills() {
+    //Element.prototype.remove
     (function (arr) {
         arr.forEach(function (item) {
         if (item.hasOwnProperty('remove')) {
@@ -16,6 +17,17 @@ function runPolyfills() {
         });
         });
     })([Element.prototype, CharacterData.prototype, DocumentType.prototype]);
+
+    //Element.prototype.closest
+    (function(ELEMENT) {
+        ELEMENT.matches = ELEMENT.matches || ELEMENT.mozMatchesSelector || ELEMENT.msMatchesSelector || ELEMENT.oMatchesSelector || ELEMENT.webkitMatchesSelector;
+        ELEMENT.closest = ELEMENT.closest || function closest(selector) {
+            if (!this) return null;
+            if (this.matches(selector)) return this;
+            if (!this.parentElement) {return null}
+            else return this.parentElement.closest(selector)
+          };
+    }(Element.prototype));
 };
 
 export default runPolyfills;
