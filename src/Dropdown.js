@@ -89,9 +89,19 @@ class Dropdown {
     if(!store) {
       return;
     }
-    let index = this.datalistRef.childElementCount;
-    for(const value of store.getRange(index)) {
-      if(index === store.getOptions('packCount')/2) {
+
+    // if list is not empty - subtract sentinel from count
+    let listItemsCount = this.datalistRef.childElementCount > 0 ?
+      this.datalistRef.childElementCount - 1 : this.datalistRef.childElementCount;
+    
+    const packCount = store.getOptions('packCount');
+    let index = listItemsCount;
+    const range = store.getRange(index);
+    if(!range) {      
+      return;
+    }
+    for(const value of range) {
+      if(index === listItemsCount + packCount - Math.floor(packCount/5)) {
         this.datalistRef.appendChild(this.sentinel);
       }
       this.datalistRef.appendChild(this.renderUser(index++, value));        
@@ -115,7 +125,7 @@ class Dropdown {
     
     const fullNameNode = document.createElement('span');
     fullNameNode.classList.add('full-name');
-    fullNameNode.innerHTML =  `${name} ${surname}`;
+    fullNameNode.innerHTML =  `${id} ${name} ${surname}`;
 
     const workplaceNode = document.createElement('span');
     workplaceNode.classList.add('workplace');
