@@ -83,7 +83,7 @@ class Dropdown {
       this.datalistRef = datalist;
 
       this.sentinel = document.createElement('div');
-      this.sentinel.setAttribute('id', `${id}_sentinel`);
+      this.sentinel.classList.add('sentinel');
     }
     const { store } = this.props;    
     if(!store) {
@@ -97,7 +97,8 @@ class Dropdown {
     const packCount = store.getOptions('packCount');
     let index = listItemsCount;
     const range = store.getRange(index);
-    if(!range) {      
+    if(!range) {
+      this.datalistRef.removeChild(this.sentinel);
       return;
     }
     for(const value of range) {
