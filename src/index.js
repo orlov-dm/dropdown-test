@@ -1,10 +1,11 @@
 import "@babel/polyfill";
+import runPolyfils from './polyfills';
+runPolyfils();
+
 import 'normalize.css';
 import { stringify } from 'svgson-next';
-
 import Dropdown from './Dropdown';
 import './styles/main.css';
-
 
 
 function getData() {
@@ -23,4 +24,8 @@ function getData() {
 
 const data = getData();
 
-(new Dropdown({ id: 'dropdown', data })).render();
+(new Dropdown({
+    id: 'dropdown',
+    data,
+    placeholder: 'Введите имя друга'
+})).init();
