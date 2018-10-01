@@ -24,7 +24,7 @@
     "webpack-cli": "^3.1.1"
   },
   "scripts": {
-    "build": "webpack",
+    "build": "webpack --mode=production",
     "watch": "webpack --watch",
     "server": "nodemon server/app.js",
     "debug": "node --nolazy --inspect-brk=8888 server/app.js"
