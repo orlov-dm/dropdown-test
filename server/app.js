@@ -14,6 +14,7 @@ app.get('/', function (req, res) {
     startIndex: 0, 
     count: LOAD_PACK_SIZE
   }).then(data => {
+    console.log(data[0]);
     res.render('index', {
       data: Core.parseClientData(data)
     });

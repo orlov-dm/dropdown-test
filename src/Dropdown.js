@@ -94,7 +94,8 @@ class Dropdown {
 
     const listItemsCount = this.datalistRef.childElementCount;    
     let index = listItemsCount;
-    const range = await store.getRange(index);
+    const query = this.inputRef.value.length ? this.inputRef.value : null;
+    const range = await store.getRange(index, query);
     console.log('renderData from index: ' + index);
     if(!range) {
       this.state.canFetch = false;      
@@ -183,6 +184,10 @@ class Dropdown {
       this.toggleAdd(true);
       hideElement(this.datalistRef);
     });
+    this.inputRef.addEventListener('change', event => {
+
+    });
+
     this.inputContainerRef.addEventListener('click', event => {
       event.stopPropagation();
       if(!multiple && this.state.selected.size) {

@@ -24,9 +24,17 @@ function getData() {
     return data;
 };
 
+
 const packCount = 50;
 const data = getData();
-const store = new Store({data, packCount});
+const url = '/users';
+const reviver = function(key, value) {
+    if(key === 'avatarUrl') {
+        return stringify(value);
+    }
+    return value;
+};
+const store = new Store({data, packCount, url, reviver});
 
 (new Dropdown({
     id: 'dropdown',
