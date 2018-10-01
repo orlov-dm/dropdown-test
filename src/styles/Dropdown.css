@@ -84,18 +84,20 @@
     background-color: var(--background-color);
 }
 
-.dropdown .data > * {
+.dropdown .data .row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 8px 12px;
+    background-color: white;
+
 }
 
-.dropdown .data > .row:not(:last-child) {
+.dropdown .data .row:not(:last-child) {
     border-bottom: 1px solid var(--border-color);
 }
 
-.dropdown .data > .row:hover {
+.dropdown .data .row:hover {
     background-color: var(--background-color);
     color: var(--hover-text-color);
 }
@@ -121,9 +123,4 @@
 .dropdown .data .user-info .full-name {
     color: var(--main-color);
     font-weight: bold;
-}
-
-.dropdown .data .sentinel {    
-    height: 1px;
-    padding: 0;
 }

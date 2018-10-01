@@ -11,6 +11,7 @@ class Dropdown {
     this.node = node != null ? node : document.getElementById(id);
     this.state = {
       'selected': new Set(),
+      'canFetch': true
     };
 
     this.inputContainerRef = null;
@@ -72,7 +73,11 @@ class Dropdown {
     this.node.classList.add('dropdown');
   }
 
-  renderData() {
+  async renderData() {    
+    const { canFetch } = this.state;
+    if(!canFetch) {
+      return;
+    }
     if(!this.datalistRef) {
       const { id } = this.props;
       const datalist = document.createElement('div');
@@ -81,32 +86,23 @@ class Dropdown {
       datalist.classList.add('hidden');
       this.inputContainerRef.appendChild(datalist);
       this.datalistRef = datalist;
-
-      this.sentinel = document.createElement('div');
-      this.sentinel.classList.add('sentinel');
     }
     const { store } = this.props;    
     if(!store) {
       return;
     }
 
-    // if list is not empty - subtract sentinel from count
-    let listItemsCount = this.datalistRef.childElementCount > 0 ?
-      this.datalistRef.childElementCount - 1 : this.datalistRef.childElementCount;
-    
-    const packCount = store.getOptions('packCount');
+    const listItemsCount = this.datalistRef.childElementCount;    
     let index = listItemsCount;
-    const range = store.getRange(index);
+    const range = await store.getRange(index);
+    console.log('renderData from index: ' + index);
     if(!range) {
-      this.datalistRef.removeChild(this.sentinel);
+      this.state.canFetch = false;      
       return;
     }
     for(const value of range) {
-      if(index === listItemsCount + packCount - Math.floor(packCount/5)) {
-        this.datalistRef.appendChild(this.sentinel);
-      }
       this.datalistRef.appendChild(this.renderUser(index++, value));        
-    }        
+    }    
   }
 
   renderUser(index, { data }) {
@@ -206,13 +202,17 @@ class Dropdown {
       hideElement(this.datalistRef);
     });
 
-    this.observer = new IntersectionObserver(entries => {      
-      if (entries[0].intersectionRatio <= 0) {
+    this.datalistRef.addEventListener('scroll', event => {
+      if(!this.state.canFetch) {
         return;
       }
-      this.renderData();
-    });
-    this.observer.observe(this.sentinel);
+      let { target } = event;
+      const scrollPosition = target.scrollHeight - target.scrollTop - target.offsetHeight;
+      if(scrollPosition < 1000) {
+          console.log(scrollPosition);
+          this.renderData();
+      }      
+    });    
   }
 
   select(index) {

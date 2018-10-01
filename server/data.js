@@ -110,9 +110,9 @@ async function generateTestUser(i) {
   return new User(userValues);
 }
 
-async function generateTestData(count = 10000) {
+async function generateTestData(startIndex = 0, count = 10000) {
   const data = [];
-  let i = 0;
+  let i = startIndex;
   while (i < count) {
     const user = await generateTestUser(++i);
     data.push(user);

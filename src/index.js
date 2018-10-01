@@ -24,7 +24,7 @@ function getData() {
     return data;
 };
 
-const packCount = 20;
+const packCount = 50;
 const data = getData();
 const store = new Store({data, packCount});
 
