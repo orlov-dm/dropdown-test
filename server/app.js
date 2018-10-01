@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const querystring = require('querystring');
 const Core = require('./Core');
 
 const app = express();
@@ -12,7 +11,8 @@ const LOAD_PACK_SIZE = 1000;
 app.get('/', function (req, res) {
   Core.getData({
     startIndex: 0, 
-    count: LOAD_PACK_SIZE
+    count: LOAD_PACK_SIZE,
+    isFavourite: true
   }).then(data => {
     console.log(data[0]);
     res.render('index', {

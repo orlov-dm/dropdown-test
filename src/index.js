@@ -10,7 +10,7 @@ import './styles/main.css';
 
 
 
-function getData() {
+function getFavouriteData() {
     // Read the JSON-formatted data from the DOM.
     const element = document.getElementById('user_data');
     const data = JSON.parse(element.textContent, function(key, value) {
@@ -26,26 +26,33 @@ function getData() {
 
 
 const packCount = 50;
-const data = getData();
-const url = '/users';
-const reviver = function(key, value) {
-    if(key === 'avatarUrl') {
-        return stringify(value);
+const favouriteStore = new Store({
+    data: getFavouriteData(),
+    packCount
+});
+const restStore = new Store({
+    packCount,
+    url: '/users',
+    reviver: function(key, value) {
+        if(key === 'avatarUrl') {
+            return stringify(value);
+        }
+        return value;
     }
-    return value;
-};
-const store = new Store({data, packCount, url, reviver});
+});
 
 (new Dropdown({
     id: 'dropdown',
-    store,
+    favouriteStore,
+    restStore,
     placeholder: 'Введите имя друга',
     multiple: true,
 })).init();
 
 (new Dropdown({
     id: 'dropdown_single',
-    store,
+    favouriteStore,
+    restStore,    
     placeholder: 'Введите имя друга',
     multiple: false
 })).init();

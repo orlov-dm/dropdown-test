@@ -7,11 +7,12 @@ class Dropdown {
   constructor(props) {
     const { id, node = null } = props;
     this.props = props;
-    
+    const { favouriteStore } = this.props;
     this.node = node != null ? node : document.getElementById(id);
     this.state = {
-      'selected': new Set(),
-      'canFetch': true
+      selected: new Set(),
+      canFetch: true,
+      store: favouriteStore
     };
 
     this.inputContainerRef = null;
@@ -23,7 +24,7 @@ class Dropdown {
     this.render();
     this.subscribe();
     this.refresh();
-  }
+  }  
 
   render() {
     console.log('Render: ', this.node, this.props);
@@ -31,7 +32,7 @@ class Dropdown {
       return;
     }
     const container = document.createDocumentFragment();
-    const { id, store, placeholder, multiple } = this.props;
+    const { id, placeholder, multiple } = this.props;
 
     const inputContainer = document.createElement('div');
     inputContainer.classList.add('input-container');
@@ -87,20 +88,28 @@ class Dropdown {
       this.inputContainerRef.appendChild(datalist);
       this.datalistRef = datalist;
     }
-    const { store } = this.props;    
+    const { store } = this.state;    
     if(!store) {
       return;
     }
 
     const listItemsCount = this.datalistRef.childElementCount;    
     let index = listItemsCount;
+    if(this.state.store === this.props.restStore) {
+      index -= this.props.favouriteStore.length;
+    }
     const query = this.inputRef.value.length ? this.inputRef.value : null;
     const range = await store.getRange(index, query);
     console.log('renderData from index: ' + index);
     if(!range) {
+      if(this.state.store === this.props.favouriteStore) {
+        this.state.store = this.props.restStore;
+        await this.renderData();
+        return;
+      }
       this.state.canFetch = false;      
       return;
-    }
+    }        
     for(const value of range) {
       this.datalistRef.appendChild(this.renderUser(index++, value));        
     }    
@@ -274,6 +283,10 @@ class Dropdown {
       this.datalistRef.style.top = `${this.inputContainerRef.offsetHeight}px`;
       this.timerID = null;
     }, 0);
+  }
+
+  switchStore() {
+
   }
 }
 

@@ -1,9 +1,8 @@
-import { stringify } from 'svgson-next';
 class Store {
   constructor({
     packCount = 20,
     packFetchCount = 1000,
-    url,
+    url = null,
     data = [],    
     reviver = null,
   }) {
@@ -13,13 +12,17 @@ class Store {
       url,
       reviver
     };
-    
+    const canFetch = url != null;
     this.state = {
       data,
-      canFetch: true,
+      canFetch,
       isFetching: false
     };   
-  }  
+  }
+
+  get length() {
+    return this.state.data.length;
+  }
 
   getOptions(field) {
     if(!this.props.hasOwnProperty(field)) {
@@ -39,7 +42,7 @@ class Store {
 
   shouldFetch(index) {
     if(!this.state.canFetch || this.state.isFetching) {
-      return;
+      return false;
     }
     const { packFetchCount } = this.props;
     const { data } = this.state;
@@ -54,11 +57,15 @@ class Store {
     }
     this.updateFilter(query);
     const isRowValid = this.isRowValid.bind(this);
+    const length = data.length;
+    if (startIndex >= length) {
+      return null;
+    }
     return {
       [Symbol.iterator]: () => {
         let i = startIndex;
         const endIndex = startIndex + packCount;
-        const length = data.length;
+        
 
         return {
           next() {
@@ -89,10 +96,10 @@ class Store {
     const result = await response.text();
 
     const data = JSON.parse(result, reviver);
-    if(data.length) {
-      this.state.data.push(...data);
-    } else {
+    if(!data.length) {
       this.state.canFetch = false;    
+    } else {
+      this.state.data.push(...data);
     }    
     this.state.isFetching = false;
   }
