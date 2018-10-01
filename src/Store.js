@@ -5,12 +5,14 @@ class Store {
     url = null,
     data = [],    
     reviver = null,
+    filterFields = null
   }) {
     this.props = {
       packCount,
       packFetchCount,
       url,
-      reviver
+      reviver,
+      filterFields
     };
     const canFetch = url != null;
     this.state = {
@@ -66,14 +68,16 @@ class Store {
         let i = startIndex;
         const endIndex = startIndex + packCount;
         
-
+        let count = 0;
         return {
           next() {
-            if (i < endIndex && i < length) {
+            if (count < packCount && i < length) {
               const row = data[i];
               if(!isRowValid(row)) {
+                ++i;
                 return this.next();
               }
+              ++count;
               return {
                 done: false,
                 value: data[i++]
@@ -109,16 +113,19 @@ class Store {
       this.filterRegexp = null;
       return;
     }
-    this.filterRegexp = new RegExp(query,"");    
+    this.filterRegexp = new RegExp('.*' + query + '.*','');    
   }
 
   isRowValid(row) {
     if(this.filterRegexp == null) {
       return true;
     }
-    
-    for(const value of Object.values(row)) {
-      if(this.filterRegexp.test(value)) {
+    const { filterFields } = this.props;
+    for(const field of filterFields) {
+      if(!row.data.hasOwnProperty(field) || row.data[field] == null) {
+        continue;
+      }
+      if(this.filterRegexp.test(row.data[field])) {
         return true;
       }
     }

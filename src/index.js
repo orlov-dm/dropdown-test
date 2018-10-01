@@ -7,8 +7,9 @@ import 'normalize.css';
 import Dropdown from './Dropdown';
 import Store from './Store';
 import './styles/main.css';
+import * as Constants from '../server/constants';
 
-
+console.log(Constants);
 
 function getFavouriteData() {
     // Read the JSON-formatted data from the DOM.
@@ -26,9 +27,15 @@ function getFavouriteData() {
 
 
 const packCount = 50;
+const filterFields = [
+    Constants.USER_FIELD_NAME,
+    Constants.USER_FIELD_SURNAME,
+    Constants.USER_FIELD_WORKPLACE    
+];
 const favouriteStore = new Store({
     data: getFavouriteData(),
-    packCount
+    packCount,
+    filterFields
 });
 const restStore = new Store({
     packCount,

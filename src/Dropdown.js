@@ -186,6 +186,12 @@ class Dropdown {
     return infoNode;
   }
 
+  clear() {
+    while (this.datalistRef.firstChild) {
+      this.datalistRef.removeChild(this.datalistRef.firstChild);
+    }
+  }
+
   subscribe() {
     const { multiple } = this.props;
     document.addEventListener('click', event => {
@@ -194,7 +200,9 @@ class Dropdown {
       hideElement(this.datalistRef);
     });
     this.inputRef.addEventListener('change', event => {
-
+      hideElement(this.datalistRef);
+      this.clear();
+      this.renderData();
     });
 
     this.inputContainerRef.addEventListener('click', event => {
