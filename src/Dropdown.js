@@ -76,7 +76,6 @@ class Dropdown extends Component {
   }  
 
   render(prevState = null) {
-    console.log('Render: ', this.node, this.props);
     if(prevState == null) {
       return;
     }
@@ -262,14 +261,15 @@ class Dropdown extends Component {
 
   subscribe() {
     const { multiple } = this.props;
-    document.addEventListener('click', event => {
-      event.stopPropagation();
+    this.inputRef.addEventListener('change', event => {
+      this.refetchData();
+    });
+
+    this.inputRef.addEventListener('blur', event => {
+      console.log(event);
       this.setState({
         inputFocused: false
       });
-    });
-    this.inputRef.addEventListener('change', event => {
-      this.refetchData();
     });
 
     this.inputRef.addEventListener('keydown', event => {
