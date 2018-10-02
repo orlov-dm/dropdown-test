@@ -49,7 +49,7 @@ class Store {
     const { packFetchCount } = this.props;
     const { data } = this.state;
     return index >= (data.length - packFetchCount/2);
-  }
+  }  
 
   async getRange(startIndex, query = null) {
     const { packCount } = this.props;
@@ -70,15 +70,17 @@ class Store {
         return {
           next() {
             if (count < packCount && i < length) {
-              const row = data[i];
+              const row = data[i];              
               if(!isRowValid(row)) {
                 ++i;
                 return this.next();
               }
               ++count;
+              ++i;
+              row.index = i;
               return {
                 done: false,
-                value: data[i++]
+                value: row
               };
             } else {
               return {
@@ -118,12 +120,18 @@ class Store {
     this.state.isFetching = false;
   }
 
+  prepareQuery(query) {
+    query = query.trim().toLowerCase();
+    return query;
+  }
+
   updateFilter(query) {
     if(query == null) {
       this.filterRegexp = null;
       return;
     }
-    this.filterRegexp = new RegExp('.*' + query + '.*','');    
+    query = this.prepareQuery(query);
+    this.filterRegexp = new RegExp('.*' + query + '.*');    
   }
 
   isRowValid(row) {
@@ -135,7 +143,7 @@ class Store {
       if(!row.data.hasOwnProperty(field) || row.data[field] == null) {
         continue;
       }
-      if(this.filterRegexp.test(row.data[field])) {
+      if(this.filterRegexp.test(row.data[field].toLowerCase())) {
         return true;
       }
     }

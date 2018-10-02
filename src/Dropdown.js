@@ -22,6 +22,7 @@ class Dropdown extends Component {
     this.inputContainerRef = null;
     this.inputRef = null;
     this.datalistRef = null;
+    this.inputTimeout = null;
   }
 
   init() {
@@ -153,10 +154,13 @@ class Dropdown extends Component {
       return;
     }
 
-    const listItemsCount = this.datalistRef.childElementCount;    
-    let index = listItemsCount;    
+    let index = 0;
+    const lastRow = this.datalistRef.lastElementChild;
+    if(lastRow) {
+      index = Number(lastRow.getAttribute('index')) + 1;
+    }
     const query = this.inputRef.value.length ? this.inputRef.value : null;
-    const range = await store.getRange(index, query);    
+    const range = await store.getRange(index, query);
     if(!range) {      
       this.setState({
         canFetch: false
@@ -167,7 +171,7 @@ class Dropdown extends Component {
       if(this.state.selected.has(value.data.id)) {
         continue;
       }
-      this.datalistRef.appendChild(this.renderUser(index++, value.data));        
+      this.datalistRef.appendChild(this.renderUser(value.index, value.data));        
     }    
   }
 
@@ -260,8 +264,19 @@ class Dropdown extends Component {
 
   subscribe() {
     const { multiple } = this.props;
-    this.inputRef.addEventListener('change', event => {
-      this.refetchData();
+    this.inputRef.addEventListener('input', event => {
+      //add input timeout for short words too reduce query counts
+      if(this.inputTimeout) {
+        clearTimeout(this.inputTimeout);
+        this.inputTimeout = null;
+      }
+      let timeout = 0;
+      if(event.target.value.length < 4) {
+        timeout = 500; //msec
+      }
+      this.inputTimeout = setTimeout(() => {
+        this.refetchData();
+      }, timeout);      
     });
 
     this.inputRef.addEventListener('blur', event => {
