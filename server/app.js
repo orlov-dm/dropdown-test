@@ -8,24 +8,23 @@ app.set('view engine', 'html');
 
 const LOAD_PACK_SIZE = 1000;
 
-app.get('/', function (req, res) {
-  Core.getData({
-    startIndex: 0, 
-    count: LOAD_PACK_SIZE,
-    isFavourite: true
-  }).then(data => {
-    console.log(data[0]);
+app.get('/', function (req, res) {  
+  loadUsers(0, LOAD_PACK_SIZE).then(data => {
     res.render('index', {
-      data: Core.parseClientData(data)
+      data
     });
-  });
+  });  
 });
 app.get('/users', function (req, res) {
   res.setHeader('Content-Type', 'application/json');  
   const {
-    startIndex = 0,
+    startIndex = null,
     packCount = LOAD_PACK_SIZE
   } = req.query;
+  if(startIndex == null) {
+    res.send('Start index is not set');
+    return;
+  }
   loadUsers(Number(startIndex), Number(packCount)).then(data => {
     res.send(data);
   });

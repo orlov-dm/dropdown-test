@@ -1,25 +1,36 @@
 
 
-export const showElement = function(element) {
+export const showElement = function(element, layout = false, value = true) {
     if(!element) {
         console.error('Element is empty');
         return;
     }
-    element.classList.remove('hidden');
+    if(value) {
+        const hiddenClass = layout ? 'hidden' : 'hidden-block';
+        element.classList.remove(hiddenClass);
+    } else {
+        hideElement(element, layout);
+    }
 };
 
-export const hideElement = function(element) {
+export const hideElement = function(element, layout = false, value = true) {
     if(!element) {
         console.error('Element is empty');
         return;
+    }    
+    if(value) {
+        const hiddenClass = layout ? 'hidden' : 'hidden-block';
+        element.classList.add(hiddenClass);
+    } else {
+        showElement(element);
     }
-    element.classList.add('hidden');
 };
 
-export const toggleElement = function(element) {
+export const toggleElement = function(element, layout = false) {
     if(!element) {
         console.error('Element is empty');
         return;
     }
-    element.classList.toggle('hidden');
+    const hiddenClass = layout ? 'hidden' : 'hidden-block';
+    element.classList.toggle(hiddenClass);
 };

@@ -26,19 +26,16 @@ function getFavouriteData() {
 };
 
 
-const packCount = 50;
 const filterFields = [
     Constants.USER_FIELD_NAME,
     Constants.USER_FIELD_SURNAME,
     Constants.USER_FIELD_WORKPLACE    
 ];
-const favouriteStore = new Store({
+const store = new Store({
     data: getFavouriteData(),
-    packCount,
-    filterFields
-});
-const restStore = new Store({
-    packCount,
+    packCount: 50,
+    packFetchCount: 1000,
+    filterFields,
     url: '/users',
     reviver: function(key, value) {
         if(key === 'avatarUrl') {
@@ -50,16 +47,14 @@ const restStore = new Store({
 
 (new Dropdown({
     id: 'dropdown',
-    favouriteStore,
-    restStore,
+    store,
     placeholder: 'Введите имя друга',
     multiple: true,
 })).init();
 
 (new Dropdown({
     id: 'dropdown_single',
-    favouriteStore,
-    restStore,    
+    store,    
     placeholder: 'Введите имя друга',
     multiple: false
 })).init();

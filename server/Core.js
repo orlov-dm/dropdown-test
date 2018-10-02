@@ -1,14 +1,9 @@
 const Constants = require('./constants');
 const generateData = require('./data');
 
-generateData(0, 1000).then(generatedData => Core.setFavouriteData(generatedData));
-generateData(1000, 9000).then(generatedData => Core.setData(generatedData));
+generateData(0, 10000).then(generatedData => Core.setData(generatedData));
 
 class Core {
-    static setFavouriteData(data) {
-        Core.favouriteData = data;
-        console.log('Favourite data ' + data.length);
-    }
     static setData(data) {
         Core.data = data;
         console.log('Rest data ' + data.length);
@@ -18,15 +13,15 @@ class Core {
         count,
         isFavourite = false
     } = {}) {
-        //TODO make custom get/set for not copying array;
-        if(isFavourite) {
-            return Core.favouriteData;
+        const data = Core.data;
+        if(!data) {
+            return 'Data is not ready';
         }
         if(startIndex < 0) {
             return 'Wrong index';
         }
-        const data = Core.data;
         const endIndex = startIndex + count;
+        //TODO make custom get/set for not copying array;
         return data.slice(startIndex, (endIndex > data.length ? data.length : endIndex));
     }
 
@@ -37,5 +32,6 @@ class Core {
         });
     }
 }
+Core.data = null;
 
 module.exports = Core;

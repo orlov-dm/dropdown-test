@@ -96,7 +96,7 @@
 .dropdown .data .row:not(:last-child) {
     border-bottom: 1px solid var(--border-color);
 }
-
+.dropdown .data .row.current,
 .dropdown .data .row:hover {
     background-color: var(--background-color);
     color: var(--hover-text-color);

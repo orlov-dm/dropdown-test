@@ -66,8 +66,6 @@ class Store {
     return {
       [Symbol.iterator]: () => {
         let i = startIndex;
-        const endIndex = startIndex + packCount;
-        
         let count = 0;
         return {
           next() {
@@ -104,6 +102,18 @@ class Store {
       this.state.canFetch = false;    
     } else {
       this.state.data.push(...data);
+      // const MAX_APPEND_COUNT = 200;
+      // const appendData = (from = 0) => {
+      //   let i = from;
+      //   while(i < MAX_APPEND_COUNT && i < data.length) {
+      //     this.state.data.push(data[i++]);
+      //   }
+      //   if(i < data.length) {
+      //     setTimeout(appendData, 0, i);
+      //   }
+      // };
+
+      // appendData();
     }    
     this.state.isFetching = false;
   }
