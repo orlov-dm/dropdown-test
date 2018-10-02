@@ -75,9 +75,8 @@ class Store {
                 ++i;
                 return this.next();
               }
-              ++count;
-              ++i;
-              row.index = i;
+              ++count;              
+              row.index = i++;
               return {
                 done: false,
                 value: row
@@ -104,18 +103,6 @@ class Store {
       this.state.canFetch = false;    
     } else {
       this.state.data.push(...data);
-      // const MAX_APPEND_COUNT = 200;
-      // const appendData = (from = 0) => {
-      //   let i = from;
-      //   while(i < MAX_APPEND_COUNT && i < data.length) {
-      //     this.state.data.push(data[i++]);
-      //   }
-      //   if(i < data.length) {
-      //     setTimeout(appendData, 0, i);
-      //   }
-      // };
-
-      // appendData();
     }    
     this.state.isFetching = false;
   }

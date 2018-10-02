@@ -74,7 +74,7 @@ async function getAvatar(id, gender) {
   return avatar;
 }
 
-async function generateTestUser(i) {
+async function generateTestUser(i) {  
   const gender = getRandomInt(0, 1);
   const avatar = await getAvatar(i, gender);
   const userValues = {
@@ -114,7 +114,7 @@ async function generateTestData(startIndex = 0, count = 10000) {
   let i = startIndex;
 
   while ((i-startIndex) < count) {
-    const user = await generateTestUser(i);
+    const user = await generateTestUser(i++);
     data.push(user);
   }
   return data;

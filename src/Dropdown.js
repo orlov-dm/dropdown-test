@@ -2,7 +2,7 @@ import Component from './Component';
 import './styles/Dropdown.css';
 import crossIcon from './images/cross.svg';
 import plusIcon from './images/plus.svg';
-import { showElement, hideElement } from './common';
+import { showElement, hideElement, isNodeInView } from './common';
 import * as Constants from './constants';
 
 class Dropdown extends Component {
@@ -138,8 +138,10 @@ class Dropdown extends Component {
       const row = this.datalistRef.childNodes[current];
       row.classList.add('current');
 
-      //TODO fix scroll position
-      this.datalistRef.scrollTop = row.offsetTop + this.datalistRef.clientHeight - row.clientHeight;            
+      if(!isNodeInView(row)) {
+        row.scrollIntoView(current == null || current < prevCurrent);
+      }
+
     }
   }
 
@@ -254,12 +256,16 @@ class Dropdown extends Component {
     }
   }
 
-  setCurrent(index) {    
-    if(index >= 0 && index < this.datalistRef.childElementCount) {
-      this.setState({
-        current: index
-      });
+  setCurrent(index) {
+    let current = index;
+    if (index >= this.datalistRef.childElementCount) {
+      current = this.datalistRef.childElementCount - 1;
+    } else if( index < 0 )  {
+      current = 0;
     }
+    this.setState({
+      current
+    });
   }
 
   subscribe() {
@@ -280,19 +286,31 @@ class Dropdown extends Component {
     });
 
     this.inputRef.addEventListener('blur', event => {
-      console.log(event);
       this.setState({
         inputFocused: false
       });
     });
 
     this.inputRef.addEventListener('keydown', event => {
-      if (event.keyCode == Constants.KEY_UP ||
-        event.keyCode == Constants.KEY_DOWN) {
-          const delta = event.keyCode == Constants.KEY_DOWN ? 1 : -1;
-          const { current } = this.state;
-          this.setCurrent(current == null ? 0 : (current + delta));
+      console.log(event.keyCode);
+      const keyCode = Number(event.keyCode);
+      if(!Constants.NAVIGATION_KEYS.includes(keyCode)) {
+        return;
+      }
+      const { current } = this.state;
+      let nextCurrent = current == null ? 0 : current;
+      if (keyCode == Constants.KEY_UP ||
+        keyCode == Constants.KEY_DOWN) {
+        nextCurrent += keyCode == Constants.KEY_DOWN ? 1 : -1;
+      } else if (keyCode == Constants.KEY_PAGE_UP ||
+        keyCode == Constants.KEY_PAGE_DOWN) {
+        nextCurrent += keyCode == Constants.KEY_PAGE_DOWN ? 10 : -10;
+      } else if (keyCode == Constants.KEY_PAGE_HOME) {
+        nextCurrent = 0;
+      } else if (keyCode == Constants.KEY_PAGE_END) {
+        nextCurrent = this.datalistRef.childElementCount - 1;
       }      
+      this.setCurrent(nextCurrent);
     });
 
     this.inputContainerRef.addEventListener('click', event => {      
@@ -306,14 +324,10 @@ class Dropdown extends Component {
     });
     
     this.datalistRef.addEventListener('mousedown', event => {
-      event.preventDefault();
-      //event.stopPropagation();
       let { target } = event;      
       target = target.closest('.row');
       if(target) {
-        // found
-        const id = target.getAttribute('user-id');
-        this.select(id);        
+        this.select(target);        
       }      
     });
 
@@ -329,15 +343,14 @@ class Dropdown extends Component {
     });    
   }
 
-  select(id) {
-    id = Number(id);
-    const row = this.getRow(id);
+  select(row) {    
     if(!row) {
-      console.error(`Can't select id: ${id}`);
+      console.error("Can't select row, ", row);
       return;
     }
     const { store, multiple } = this.props;
     
+    const id = Number(row.getAttribute('user-id'));
     const user = store.get(row.getAttribute('index'));
     const label = `${user.data.name} ${user.data.surname}`;
     const info = this.renderInfo({
@@ -348,7 +361,7 @@ class Dropdown extends Component {
       actionCallback: event => {
         event.stopPropagation();
         info.remove();
-        const selected = new Set(this.state.selected);
+        const selected = new Set(this.state.selected);        
         selected.delete(id);
         this.refetchData();
         this.setState({
@@ -402,7 +415,8 @@ class Dropdown extends Component {
     this.clear();
     this.fetchData();
     this.setState({
-      canFetch: true
+      canFetch: true,
+      current: null
     });
     this.datalistRef.scrollTo(0,0);
   }
