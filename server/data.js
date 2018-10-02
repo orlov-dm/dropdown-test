@@ -6,7 +6,6 @@ const FemaleSprites = require('@dicebear/avatars-female-sprites').default;
 const svgson = require('svgson-next').default;
 
 
-
 const GENDER_MALE = 0;
 const GENDER_FEMALE = 1;
 
@@ -79,7 +78,7 @@ async function generateTestUser(i) {
   const gender = getRandomInt(0, 1);
   const avatar = await getAvatar(i, gender);
   const userValues = {
-    [Constants.USER_FIELD_ID]: i,
+    [Constants.USER_FIELD_ID]: i+10000,
     [Constants.USER_FIELD_GENDER]: gender,
     [Constants.USER_FIELD_AVATAR_URL]: avatar
   };
@@ -115,7 +114,7 @@ async function generateTestData(startIndex = 0, count = 10000) {
   let i = startIndex;
 
   while ((i-startIndex) < count) {
-    const user = await generateTestUser(++i);
+    const user = await generateTestUser(i);
     data.push(user);
   }
   return data;
