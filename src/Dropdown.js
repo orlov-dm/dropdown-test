@@ -65,8 +65,15 @@ class Dropdown extends Component {
       this.addInfoRef = addInfo;
       hideElement(addInfo);
     }
+    
+    const datalist = document.createElement('div');
+    datalist.setAttribute('id', `${id}_data`);
+    datalist.classList.add('data');
+    datalist.classList.add('hidden');      
+    this.datalistRef = datalist;          
 
     this.node.appendChild(container);
+    this.node.appendChild(datalist);
     this.node.classList.add('dropdown');
 
     this.render();
@@ -140,15 +147,7 @@ class Dropdown extends Component {
     if(!canFetch) {
       return;
     }
-    if(!this.datalistRef) {
-      const { id } = this.props;
-      const datalist = document.createElement('div');
-      datalist.setAttribute('id', `${id}_data`);
-      datalist.classList.add('data');
-      datalist.classList.add('hidden');
-      this.inputContainerRef.appendChild(datalist);
-      this.datalistRef = datalist;      
-    }
+    
     const { store } = this.state;    
     if(!store) {
       return;
@@ -281,7 +280,7 @@ class Dropdown extends Component {
       }      
     });
 
-    this.inputContainerRef.addEventListener('click', event => {
+    this.inputContainerRef.addEventListener('click', event => {      
       event.stopPropagation();
       if(!multiple && this.state.selected.size) {
         return;
@@ -290,8 +289,10 @@ class Dropdown extends Component {
         inputFocused: true
       });
     });
-    this.datalistRef.addEventListener('click', event => {
-      event.stopPropagation();
+    
+    this.datalistRef.addEventListener('mousedown', event => {
+      event.preventDefault();
+      //event.stopPropagation();
       let { target } = event;      
       target = target.closest('.row');
       if(target) {
