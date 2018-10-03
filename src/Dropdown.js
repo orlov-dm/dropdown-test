@@ -6,10 +6,23 @@ import { showElement, hideElement, isNodeInView } from './common';
 import * as Constants from './constants';
 
 class Dropdown extends Component {
-  constructor(props) {
+  constructor({
+    id,
+    store,    
+    placeholder = 'Введите имя друга',
+    multiple = false,
+    needAvatars = true,
+    node = null
+  }) {
     super();
-    const { id, node = null, store } = props;
-    this.props = props;
+    this.props = {
+      id,
+      store,
+      placeholder,
+      multiple,
+      needAvatars,
+      node
+    };
     this.node = node != null ? node : document.getElementById(id);
     this.state = {
       selected: new Set(),
@@ -202,16 +215,12 @@ class Dropdown extends Component {
   }
 
   renderUser(index, { id, name, surname, workplace, avatarUrl }) {
-    const { id: dropdownId }  = this.props;
+    const { id: dropdownId, needAvatars }  = this.props;
     const userContainer = document.createElement('div');
     userContainer.setAttribute('index', index);
     userContainer.setAttribute('id', `${dropdownId}_row_${id}`);
     userContainer.setAttribute('user-id', id);
     userContainer.classList.add('row');    
-
-    const avatarNode = document.createElement('div');
-    avatarNode.classList.add('avatar');
-    avatarNode.innerHTML = avatarUrl;
 
     const userInfoNode = document.createElement('div');    
     userInfoNode.classList.add('user-info');
@@ -227,7 +236,12 @@ class Dropdown extends Component {
 
     userInfoNode.appendChild(fullNameNode);
     userInfoNode.appendChild(workplaceNode);
-    userContainer.appendChild(avatarNode);
+    if(needAvatars) {
+      const avatarNode = document.createElement('div');
+      avatarNode.classList.add('avatar');
+      avatarNode.innerHTML = avatarUrl;
+      userContainer.appendChild(avatarNode);
+    }
     userContainer.appendChild(userInfoNode);
 
     return userContainer;

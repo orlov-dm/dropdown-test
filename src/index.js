@@ -57,5 +57,6 @@ const store = new Store({
     id: 'dropdown_single',
     store,    
     placeholder: 'Введите имя друга',
-    multiple: false
+    multiple: false,
+    needAvatars: false
 })).init();
