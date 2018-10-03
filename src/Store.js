@@ -1,3 +1,6 @@
+import { transliterate, langReverse } from '../server/common';
+
+window.langReverse = langReverse;
 class Store {
   constructor({
     packCount = 20,
@@ -114,15 +117,22 @@ class Store {
 
   updateFilter(query) {
     if(query == null) {
-      this.filterRegexp = null;
+      this.filterRegexps = null;
       return;
     }
     query = this.prepareQuery(query);
-    this.filterRegexp = new RegExp('.*' + query + '.*');    
+    this.filterRegexps = [];
+    const transliteratedQuery = transliterate(query);
+    const reversedQuery = langReverse(query);
+    const reversedTransliteratedQuery = langReverse(transliteratedQuery);
+    this.filterRegexps.push(new RegExp('.*' + query + '.*'));
+    this.filterRegexps.push(new RegExp('.*' + transliteratedQuery + '.*'));
+    this.filterRegexps.push(new RegExp('.*' + reversedQuery + '.*'));
+    this.filterRegexps.push(new RegExp('.*' + reversedTransliteratedQuery + '.*'));
   }
 
   isRowValid(row) {
-    if(this.filterRegexp == null) {
+    if(this.filterRegexps == null) {
       return true;
     }
     const { filterFields } = this.props;
@@ -130,9 +140,11 @@ class Store {
       if(!row.data.hasOwnProperty(field) || row.data[field] == null) {
         continue;
       }
-      if(this.filterRegexp.test(row.data[field].toLowerCase())) {
-        return true;
-      }
+      for(const filterRegexp of this.filterRegexps) {
+        if(filterRegexp.test(row.data[field].toLowerCase())) {
+          return true;
+        }
+      };
     }
   }
 }

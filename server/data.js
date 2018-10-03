@@ -2,8 +2,9 @@ const Constants = require('./constants');
 const User = require('./User');
 const Avatars = require('@dicebear/avatars').default;
 const MaleSprites = require('@dicebear/avatars-male-sprites').default;
-const FemaleSprites = require('@dicebear/avatars-female-sprites').default;
 const svgson = require('svgson-next').default;
+const FemaleSprites = require('@dicebear/avatars-female-sprites').default;
+const transliterate = require('./common').transliterate;
 
 
 const GENDER_MALE = 0;
@@ -74,7 +75,8 @@ async function getAvatar(id, gender) {
   return avatar;
 }
 
-async function generateTestUser(i) {  
+async function generateTestUser(i) {
+  const needTransliterate = getRandomInt(0, 1);
   const gender = getRandomInt(0, 1);
   const avatar = await getAvatar(i, gender);
   const userValues = {
@@ -86,6 +88,12 @@ async function generateTestUser(i) {
     if (field === Constants.USER_FIELD_ID ||
       field === Constants.USER_FIELD_GENDER ||
       field === Constants.USER_FIELD_AVATAR_URL) {
+      continue;
+    }
+    if(field === Constants.USER_FIELD_FULLNAME) {
+      userValues[field] = 
+        userValues[Constants.USER_FIELD_NAME] + ' ' +
+        userValues[Constants.USER_FIELD_SURNAME];
       continue;
     }
     let value = null;
@@ -103,7 +111,11 @@ async function generateTestUser(i) {
         value = `id${i}`;
       }
     }
-    userValues[field] = value;
+    if((field === Constants.USER_FIELD_NAME || 
+      field === Constants.USER_FIELD_SURNAME) && needTransliterate) {
+        value = transliterate(value);
+    }
+    userValues[field] = value;    
   }
 
   return new User(userValues);

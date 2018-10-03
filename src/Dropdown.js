@@ -16,7 +16,8 @@ class Dropdown extends Component {
       canFetch: true,
       store,
       current: null,
-      inputFocused: false
+      inputFocused: false,
+      inFetch: false
     };
 
     this.inputContainerRef = null;
@@ -129,13 +130,24 @@ class Dropdown extends Component {
   renderCurrent(prevState) {
     const { current } = this.state;
     const { current: prevCurrent } = prevState;
-    if(current !== prevCurrent) {
-      
+    if(current !== prevCurrent) {      
       if(prevCurrent != null) {
-        const prevRow = this.datalistRef.childNodes[prevCurrent];
-        prevRow.classList.remove('current');
+        if(prevCurrent < this.datalistRef.childElementCount) {
+          const prevRow = this.datalistRef.childNodes[prevCurrent];
+          prevRow.classList.remove('current');
+        }
       }
-      const row = this.datalistRef.childNodes[current];
+
+      if(current == null) {
+        const newCurrent = prevCurrent - 1;
+        if(newCurrent >= 0) {
+          this.setState({
+            current: newCurrent
+          });
+        }    
+        return    
+      } 
+      const row = this.datalistRef.childNodes[current];      
       row.classList.add('current');
 
       if(!isNodeInView(row)) {
@@ -146,8 +158,13 @@ class Dropdown extends Component {
   }
 
   async fetchData() {    
-    const { canFetch } = this.state;
+    const { canFetch, inFetch } = this.state;
     if(!canFetch) {
+      return;
+    }
+
+    if(inFetch) {
+      console.log("inFetch");
       return;
     }
     
@@ -162,10 +179,14 @@ class Dropdown extends Component {
       index = Number(lastRow.getAttribute('index')) + 1;
     }
     const query = this.inputRef.value.length ? this.inputRef.value : null;
+    this.setState({
+      inFetch:true
+    });
     const range = await store.getRange(index, query);
     if(!range) {      
       this.setState({
-        canFetch: false
+        canFetch: false,
+        inFetch: false
       });
       return;
     }        
@@ -174,7 +195,10 @@ class Dropdown extends Component {
         continue;
       }
       this.datalistRef.appendChild(this.renderUser(value.index, value.data));        
-    }    
+    }
+    this.setState({
+      inFetch:false
+    });    
   }
 
   renderUser(index, { id, name, surname, workplace, avatarUrl }) {
@@ -292,13 +316,22 @@ class Dropdown extends Component {
     });
 
     this.inputRef.addEventListener('keydown', event => {
-      console.log(event.keyCode);
+      //console.log(event.keyCode);
       const keyCode = Number(event.keyCode);
+      if(keyCode === Constants.KEY_ENTER) {
+        const { current } = this.state;
+        if(current == null) {
+          return;
+        }
+        this.select(this.datalistRef.childNodes[current]);
+        return;
+      }
+
       if(!Constants.NAVIGATION_KEYS.includes(keyCode)) {
         return;
       }
       const { current } = this.state;
-      let nextCurrent = current == null ? 0 : current;
+      let nextCurrent = current == null ? -1 : current;
       if (keyCode == Constants.KEY_UP ||
         keyCode == Constants.KEY_DOWN) {
         nextCurrent += keyCode == Constants.KEY_DOWN ? 1 : -1;
@@ -336,9 +369,12 @@ class Dropdown extends Component {
         return;
       }
       let { target } = event;
-      const scrollPosition = target.scrollHeight - target.scrollTop - target.offsetHeight;
-      if(scrollPosition < 1000) {
+      //scroll to bottom
+      const scrollPosition = target.scrollHeight - (target.scrollTop + target.offsetHeight);
+      if(scrollPosition < 1000) {   
+        if(!this.state.inFetch) {
           this.fetchData();
+        }
       }      
     });    
   }

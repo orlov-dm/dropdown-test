@@ -29,6 +29,7 @@ function getFavouriteData() {
 const filterFields = [
     Constants.USER_FIELD_NAME,
     Constants.USER_FIELD_SURNAME,
+    Constants.USER_FIELD_FULLNAME,
     Constants.USER_FIELD_WORKPLACE    
 ];
 const store = new Store({
