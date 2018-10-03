@@ -1,5 +1,6 @@
 const Constants = require('./constants');
 const generateData = require('./data');
+const { transliterate, langReverse } = require('./common');
 
 generateData(0, 10000).then(generatedData => Core.setData(generatedData));
 
@@ -10,7 +11,8 @@ class Core {
   }
   static async getData({
     startIndex,
-    count
+    count,
+    query = null
   } = {}) {
     const data = Core.data;
     if (!data) {
@@ -19,9 +21,21 @@ class Core {
     if (startIndex < 0) {
       return 'Wrong index';
     }
-    const endIndex = startIndex + count;
-    //TODO make custom get/set for not copying array;
-    return data.slice(startIndex, (endIndex > data.length ? data.length : endIndex));
+    let currentCount = 0;
+    const result = [];
+    const filterRegexps = Core.getFilters(query);
+    for(let i = startIndex; i < data.length; ++i) {
+      const row = data[i];
+      if(!Core.isRowValid(row, Constants.FILTER_FIELDS, filterRegexps)) {
+        ++currentCount;
+        continue;
+      }
+      result.push(row);
+      if(++currentCount >= count) {
+        break;
+      }
+    }
+    return result;
   }
 
   static parseClientData(data) {
@@ -29,7 +43,49 @@ class Core {
       if (key === Constants.USER_FIELD_USER_URL) return undefined;
       return value;
     });
-  }  
+  }
+  
+  static isRowValid(row, filterFields, filterRegexps) {
+    if(filterRegexps == null) {
+      return true;
+    }    
+    for(const field of filterFields) {
+      if(!row.data.hasOwnProperty(field) || row.data[field] == null) {
+        continue;
+      }
+      const checkValue = row.data[field].toLowerCase();
+      for(const filterRegexp of filterRegexps) {
+        if(filterRegexp.test(checkValue)) {
+          return true;
+        }
+        //only check for basic string
+        if(field === Constants.USER_FIELD_USER_URL) {
+          break;
+        }
+      };      
+    }
+  }
+
+  static getFilters(query = null) {
+    if(query == null) {
+      return null;      
+    }
+    query = Core.prepareQuery(query);
+    const filterRegexps = [];
+    const transliteratedQuery = transliterate(query);
+    const reversedQuery = langReverse(query);
+    const reversedTransliteratedQuery = langReverse(transliteratedQuery);
+    filterRegexps.push(new RegExp('.*' + query + '.*'));
+    filterRegexps.push(new RegExp('.*' + transliteratedQuery + '.*'));
+    filterRegexps.push(new RegExp('.*' + reversedQuery + '.*'));
+    filterRegexps.push(new RegExp('.*' + reversedTransliteratedQuery + '.*'));
+    return filterRegexps;
+  }
+
+  static prepareQuery(query) {
+    query = query.trim().toLowerCase();
+    return query;
+  }
 }
 Core.data = null;
 

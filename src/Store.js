@@ -1,6 +1,5 @@
 import { transliterate, langReverse } from '../server/common';
 
-window.langReverse = langReverse;
 class Store {
   constructor({
     packCount = 20,
@@ -19,15 +18,20 @@ class Store {
     };
     const canFetch = url != null;
     this.state = {
-      data,
+       data: {
+        [Store.DATA_STATE_LOCAL]: data,
+        [Store.DATA_STATE_EXTENDED]: []
+      },
       canFetch,
-      isFetching: false
+      isFetching: false,
+      dataState: Store.DATA_STATE_LOCAL,
+      query: null
     };   
   }
 
-  get length() {
-    return this.state.data.length;
-  }
+  // get length() {
+  //   return this.state.data.length;
+  // }
 
   getOptions(field) {
     if(!this.props.hasOwnProperty(field)) {
@@ -36,8 +40,12 @@ class Store {
     return this.props[field];
   }
 
+  getData() {
+    const { data, dataState } = this.state;
+    return data[dataState];
+  }
   get(index) {
-    const { data } = this.state;
+    const data = this.getData();
     if (index >= data.length) {
       return null;
     }
@@ -49,24 +57,27 @@ class Store {
     if(!this.state.canFetch || this.state.isFetching) {
       return false;
     }
+    if(this.isInExtendedSearch()) {
+      return true;
+    }
     const { packFetchCount } = this.props;
-    const { data } = this.state;
+    const data = this.getData();
     return index >= (data.length - packFetchCount/2);
   }  
 
   async getRange(startIndex, query = null) {
     const { packCount } = this.props;
-    const { data } = this.state;
+    const data = this.getData();
     if(this.shouldFetch(startIndex + packCount)) {
       await this.dataFetch(data.length);
-    }
-    this.updateFilter(query);
+    }    
+    this.updateFilter(this.isInExtendedSearch() ? null : query);    
     const isRowValid = this.isRowValid.bind(this);
     const length = data.length;
     if (startIndex >= length) {
       return null;
     }
-    return {
+    return {       
       [Symbol.iterator]: () => {
         let i = startIndex;
         let count = 0;
@@ -98,14 +109,19 @@ class Store {
   async dataFetch(startIndex) {
     this.state.isFetching = true;
     const { packFetchCount, url, reviver } = this.props;
-    const response = await fetch(`${url}?startIndex=${startIndex}&packCount=${packFetchCount}`);    
+    const { query } = this.state;
+    const fetchQuery = [`startIndex=${startIndex}`, `packCount=${packFetchCount}`];
+    if(query != null) {
+      fetchQuery.push(`query=${query}`);
+    }
+    const response = await fetch(`${url}?${fetchQuery.join('&')}`);
     const result = await response.text();
 
     const data = JSON.parse(result, reviver);
     if(!data.length) {
       this.state.canFetch = false;    
-    } else {
-      this.state.data.push(...data);
+    } else {      
+      this.getData().push(...data);
     }    
     this.state.isFetching = false;
   }
@@ -147,6 +163,22 @@ class Store {
       };
     }
   }
+
+  isInExtendedSearch() {
+    return this.state.dataState === Store.DATA_STATE_EXTENDED;
+  }
+
+  setExtendedSearch(query = null) {
+    this.state.canFetch = true;
+    this.state.dataState = query == null ? Store.DATA_STATE_LOCAL : Store.DATA_STATE_EXTENDED;
+    this.state.query = query;
+    if(query == null) {
+      this.state.data[Store.DATA_STATE_EXTENDED] = [];
+    }
+  }
 }
+
+Store.DATA_STATE_LOCAL = 'local';
+Store.DATA_STATE_EXTENDED = 'extended';
 
 export default Store;

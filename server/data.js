@@ -108,7 +108,7 @@ async function generateTestUser(i) {
       }
     } else {
       if (field === Constants.USER_FIELD_USER_URL) {
-        value = `id${i}`;
+        value = `id${userValues[Constants.USER_FIELD_ID]}`;
       }
     }
     if((field === Constants.USER_FIELD_NAME || 

@@ -20,6 +20,14 @@ module.exports.USER_FIELDS = [
   module.exports.USER_FIELD_GENDER,
 ];
 
+module.exports.FILTER_FIELDS = [  
+  module.exports.USER_FIELD_NAME,
+  module.exports.USER_FIELD_SURNAME,
+  module.exports.USER_FIELD_FULLNAME,
+  module.exports.USER_FIELD_WORKPLACE,
+  module.exports.USER_FIELD_USER_URL
+];
+
 const DICTIONARIES = {
   'en': ['eh', 'ju', 'ja', 'shh', 'ch', 'sh', 'kh', 'jo', 'zh', 'a', 'b', 'v', 'g', 'd', 'e', 'z', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't', 'u', 'f', 'c', '', 'y', ''],
   'ru': ['э', 'ю', 'я', 'щ', 'ч', 'ш', 'х', 'ё', 'ж', 'а', 'б', 'в', 'г', 'д', 'е', 'з', 'и', 'й', 'к', 'л', 'м', 'н', 'о', 'п', 'р', 'с', 'т', 'у', 'ф', 'ц', 'ъ', 'ы', 'ь']

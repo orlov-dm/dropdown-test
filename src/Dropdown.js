@@ -147,7 +147,9 @@ class Dropdown extends Component {
       if(prevCurrent != null) {
         if(prevCurrent < this.datalistRef.childElementCount) {
           const prevRow = this.datalistRef.childNodes[prevCurrent];
-          prevRow.classList.remove('current');
+          if(prevRow) {
+            prevRow.classList.remove('current');
+          }
         }
       }
 
@@ -160,13 +162,14 @@ class Dropdown extends Component {
         }    
         return    
       } 
-      const row = this.datalistRef.childNodes[current];      
-      row.classList.add('current');
+      const row = this.datalistRef.childNodes[current];
+      if(row) {
+        row.classList.add('current');
 
-      if(!isNodeInView(row)) {
-        row.scrollIntoView(current == null || current < prevCurrent);
+        if(!isNodeInView(row)) {
+          row.scrollIntoView(current == null || current < prevCurrent);
+        }
       }
-
     }
   }
 
@@ -196,18 +199,35 @@ class Dropdown extends Component {
       inFetch:true
     });
     const range = await store.getRange(index, query);
-    if(!range) {      
+    if(!range) {
       this.setState({
         canFetch: false,
         inFetch: false
-      });
+      });      
       return;
-    }        
+    }
+    let count = 0;        
     for(const value of range) {
+      ++count;
       if(this.state.selected.has(value.data.id)) {
         continue;
       }
       this.datalistRef.appendChild(this.renderUser(value.index, value.data));        
+    }
+    if(!count) {
+      if(!store.isInExtendedSearch()) {
+        this.setState({
+          inFetch: false
+        });        
+        store.setExtendedSearch(query);
+        this.refetchData();
+      } else {
+        this.setState({
+          canFetch: false,
+          inFetch: false
+        });        
+      }
+      return;
     }
     this.setState({
       inFetch:false
@@ -319,6 +339,7 @@ class Dropdown extends Component {
         timeout = 500; //msec
       }
       this.inputTimeout = setTimeout(() => {
+        this.state.store.setExtendedSearch(null);
         this.refetchData();
       }, timeout);      
     });
@@ -463,11 +484,11 @@ class Dropdown extends Component {
 
   refetchData() {
     this.clear();
-    this.fetchData();
     this.setState({
       canFetch: true,
       current: null
     });
+    this.fetchData();
     this.datalistRef.scrollTo(0,0);
   }
 }

@@ -19,20 +19,21 @@ app.get('/users', function (req, res) {
   res.setHeader('Content-Type', 'application/json');  
   const {
     startIndex = null,
-    packCount = LOAD_PACK_SIZE
+    packCount = LOAD_PACK_SIZE,
+    query = null
   } = req.query;
   if(startIndex == null) {
     res.send('Start index is not set');
     return;
   }
-  loadUsers(Number(startIndex), Number(packCount)).then(data => {
+  loadUsers(Number(startIndex), Number(packCount), query).then(data => {
     res.send(data);
   });
 });
 
-async function loadUsers(startIndex, count) {
-  console.log('LOAD USERS START ', startIndex, count);
-  const data = await Core.getData({startIndex, count});
+async function loadUsers(startIndex, count, query = null) {
+  console.log('LOAD USERS START ', startIndex, count, query);
+  const data = await Core.getData({startIndex, count, query});
   console.log('LOAD USERS ', data.length);
   return Core.parseClientData(data);
 }
