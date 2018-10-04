@@ -2,7 +2,7 @@ const Constants = require('./constants');
 const generateData = require('./data');
 const { transliterate, langReverse } = require('./common');
 
-generateData(0, 2000).then(generatedData => Core.setData(generatedData));
+generateData(0, 10000).then(generatedData => Core.setData(generatedData));
 
 class Core {
   static setData(data) {
