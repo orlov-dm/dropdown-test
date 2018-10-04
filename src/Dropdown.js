@@ -1,7 +1,7 @@
 import Component from './Component';
-import './styles/Dropdown.css';
 import crossIcon from './images/cross.svg';
 import plusIcon from './images/plus.svg';
+
 import { showElement, hideElement, isNodeInView } from './common';
 import * as Constants from './constants';
 
@@ -12,7 +12,8 @@ class Dropdown extends Component {
     placeholder = 'Введите имя друга',
     multiple = false,
     needAvatars = true,
-    node = null
+    node = null,
+    showIds = false
   }) {
     super();
     this.props = {
@@ -21,7 +22,8 @@ class Dropdown extends Component {
       placeholder,
       multiple,
       needAvatars,
-      node
+      node,
+      showIds
     };
     this.node = node != null ? node : document.getElementById(id);
     this.state = {
@@ -57,9 +59,9 @@ class Dropdown extends Component {
     if(placeholder) {
       input.setAttribute('placeholder', placeholder);
     }
-
+    
     inputContainer.appendChild(input);
-    container.appendChild(inputContainer);
+    container.appendChild(inputContainer);    
 
     this.inputContainerRef = inputContainer;
     this.inputRef = input;
@@ -79,7 +81,7 @@ class Dropdown extends Component {
       });
       this.inputContainerRef.insertBefore(addInfo, this.inputRef);
       this.addInfoRef = addInfo;
-      hideElement(addInfo);
+      hideElement(addInfo);      
     }
 
     const datalist = document.createElement('div');
@@ -154,7 +156,7 @@ class Dropdown extends Component {
         }
       }
     }
-    this.refresh();
+    //this.refresh();
   }
 
   renderCurrent(prevState) {
@@ -209,8 +211,8 @@ class Dropdown extends Component {
     let index = 0;
     const lastRow = this.datalistRef.lastElementChild;
     if(lastRow) {
-      index = this.datalistRef.childElementCount;
-      //Number(lastRow.getAttribute('index')) + 1;
+      // index = this.datalistRef.childElementCount;
+      index = Number(lastRow.getAttribute('index')) + 1;
     }
     const query = this.inputRef.value.length ? this.inputRef.value : null;
     this.setState({
@@ -237,7 +239,7 @@ class Dropdown extends Component {
   }
 
   renderUser(index, { id, name, surname, workplace, avatarUrl }) {
-    const { id: dropdownId, needAvatars }  = this.props;
+    const { id: dropdownId, needAvatars, showIds }  = this.props;
     const userContainer = document.createElement('div');
     userContainer.setAttribute('index', index);
     userContainer.setAttribute('id', `${dropdownId}_row_${id}`);
@@ -250,7 +252,8 @@ class Dropdown extends Component {
 
     const fullNameNode = document.createElement('span');
     fullNameNode.classList.add('full-name');
-    fullNameNode.innerHTML =  `${id} ${name} ${surname}`;
+    const value = (showIds ? `${id} ` : '') + `${name} ${surname}`;
+    fullNameNode.innerHTML =  value;
 
     const workplaceNode = document.createElement('span');
     workplaceNode.classList.add('workplace');
@@ -349,6 +352,7 @@ class Dropdown extends Component {
     });
 
     this.inputRef.addEventListener('keydown', event => {
+      //TODO optimize on large node count
       //console.log(event.keyCode);
       const keyCode = Number(event.keyCode);
       if(keyCode === Constants.KEY_ENTER) {

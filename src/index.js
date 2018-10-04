@@ -58,6 +58,13 @@ const store = new Store({
     id: 'dropdown_single',
     store,
     placeholder: 'Введите имя друга',
-    multiple: false,
     needAvatars: false
+})).init();
+
+(new Dropdown({
+    id: 'dropdown_ids',
+    store,
+    placeholder: 'Введите имя друга',
+    multiple: true,
+    showIds: true
 })).init();

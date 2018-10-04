@@ -1,5 +1,6 @@
 /* TODO use postcss to define vars in main.css and import here */
-$main-color: rgb(81, 129, 184);
+
+$main-color: rgb(81, 129, 184);  
 $light-main-color: rgb(119, 165, 218);
 $secondary-color: rgb(218, 226, 234);
 $light-secondary-color: white;
@@ -10,6 +11,8 @@ $hover-text-color: rgb(101, 101, 101);
 
 .dropdown {
     position: relative;
+    color: $text-color;
+    font-weight: normal;
 }
 
 .dropdown .input-container {
@@ -103,12 +106,12 @@ $hover-text-color: rgb(101, 101, 101);
 }
 
 .dropdown .data .row:not(:last-child) {
-    border-bottom: 1px solid $border-color);
+    border-bottom: 1px solid $border-color;
 }
 .dropdown .data .row.current,
 .dropdown .data .row:hover {
-    background-color: $background-color);
-    color: $hover-text-color);
+    background-color: $background-color;
+    color: $hover-text-color;
 }
 
 .dropdown .data .row.loading {

@@ -18,7 +18,7 @@ class Store {
     };
     const canFetch = url != null;
     this.state = {
-       data: {
+      data: {
         [Store.DATA_STATE_LOCAL]: data,
         [Store.DATA_STATE_REMOTE]: []
       },
@@ -64,16 +64,18 @@ class Store {
     // if(this._isInRemoteSearch()) {
     //   return true;
     // }
-    const { packFetchCount, packCount } = this.props;
+    const { packCount } = this.props;
     const data = this.getData();
-    return index >= (data.length - packCount * 2);//packFetchCount/2);
+    return index >= (data.length - packCount * 2);
   }
 
   async getRange(startIndex, query = null) {
+    if(!this.state.canFetch) {
+      return [];
+    }
     const { packCount } = this.props;
     const data = this.getData();
-    const neededCount = startIndex + packCount;
-    if(this.shouldFetch(neededCount)) {
+    if(this.shouldFetch(startIndex + packCount)) {
       await this.dataFetch();
     }
     this.updateFilter(this._isInRemoteSearch() ? null : query);
@@ -82,7 +84,7 @@ class Store {
 
     const range = [];
     if (startIndex < length) {
-      for(let i = startIndex; range.length < neededCount && i < data.length; ++i) {
+      for(let i = startIndex; range.length < packCount && i < data.length; ++i) {
         const row = data[i];
         if(!isRowValid(row)) {
           ++i;
@@ -91,7 +93,10 @@ class Store {
         range.push(row);
       }
     }
-    if(query != null && !range.length && !this._isInRemoteSearch()) {
+    console.log(startIndex, range.length);
+    if(startIndex === 0 && 
+      query != null && !range.length && !this._isInRemoteSearch()) {
+      console.log('Remote search');
       this._setRemoteSearch(query);
       return this.getRange(0, query);
     }
