@@ -1,23 +1,37 @@
-import { stringify } from 'svgson-next';
+import { transliterate, langReverse } from '../server/common';
+
 class Store {
   constructor({
     packCount = 20,
     packFetchCount = 1000,
-    url,
-    data = []
+    url = null,
+    data = [],
+    reviver = null,
+    filterFields = null
   }) {
     this.props = {
       packCount,
       packFetchCount,
-      url      
+      url,
+      reviver,
+      filterFields
     };
-    
+    const canFetch = url != null;
     this.state = {
-      data,
-      canFetch: true,
-      isFetching: false
-    };   
-  }  
+       data: {
+        [Store.DATA_STATE_LOCAL]: data,
+        [Store.DATA_STATE_REMOTE]: []
+      },
+      canFetch,
+      isFetching: false,
+      dataState: Store.DATA_STATE_LOCAL,
+      query: null
+    };
+  }
+
+  // get length() {
+  //   return this.state.data.length;
+  // }
 
   getOptions(field) {
     if(!this.props.hasOwnProperty(field)) {
@@ -26,8 +40,12 @@ class Store {
     return this.props[field];
   }
 
+  getData() {
+    const { data, dataState } = this.state;
+    return data[dataState];
+  }
   get(index) {
-    const { data } = this.state;
+    const data = this.getData();
     if (index >= data.length) {
       return null;
     }
@@ -35,63 +53,128 @@ class Store {
     return data[index];
   }
 
+  reset() {
+    this._setRemoteSearch(null);
+  }
+
   shouldFetch(index) {
     if(!this.state.canFetch || this.state.isFetching) {
-      return;
+      return false;
     }
-    const { packFetchCount } = this.props;
-    const { data } = this.state;
-    return index >= (data.length - packFetchCount/2);
+    // if(this._isInRemoteSearch()) {
+    //   return true;
+    // }
+    const { packFetchCount, packCount } = this.props;
+    const data = this.getData();
+    return index >= (data.length - packCount * 2);//packFetchCount/2);
   }
 
-  async getRange(startIndex) {    
+  async getRange(startIndex, query = null) {
     const { packCount } = this.props;
-    const { data } = this.state;
-    if(this.shouldFetch(startIndex + packCount)) {
-      await this.usersFetch(data.length);
+    const data = this.getData();
+    const neededCount = startIndex + packCount;
+    if(this.shouldFetch(neededCount)) {
+      await this.dataFetch();
     }
-    return {
-      [Symbol.iterator]: () => {
-        let i = startIndex;
-        const endIndex = startIndex + packCount;
-        const length = data.length;
-        return {
-          next() {
-            if (i < endIndex && i < length) {
-              return {
-                done: false,
-                value: data[i++]
-              };
-            } else {
-              return {
-                done: true
-              };
-            }
-          }
-        };
+    this.updateFilter(this._isInRemoteSearch() ? null : query);
+    const isRowValid = this.isRowValid.bind(this);
+    const length = data.length;
+
+    const range = [];
+    if (startIndex < length) {
+      for(let i = startIndex; range.length < neededCount && i < data.length; ++i) {
+        const row = data[i];
+        if(!isRowValid(row)) {
+          ++i;
+          continue;
+        }
+        range.push(row);
       }
-    };
+    }
+    if(query != null && !range.length && !this._isInRemoteSearch()) {
+      this._setRemoteSearch(query);
+      return this.getRange(0, query);
+    }
+    return range;
   }
 
-  async usersFetch(startIndex) {
+  async dataFetch() {
     this.state.isFetching = true;
-    const { packFetchCount } = this.props;
-    const response = await fetch(`/users?startIndex=${startIndex}&packCount=${packFetchCount}`);    
+    const { packFetchCount, url, reviver } = this.props;
+    const { query } = this.state;
+    const data = this.getData();
+    const startIndex = data.length ? data[data.length - 1].index + 1 : 0;
+    const fetchQuery = [`startIndex=${startIndex}`, `packCount=${packFetchCount}`];
+    if(query != null) {
+      fetchQuery.push(`query=${query}`);
+    }
+    const response = await fetch(`${url}?${fetchQuery.join('&')}`);
     const result = await response.text();
-    const data = JSON.parse(result, function(key, value) {
-        if(key === 'avatarUrl') {
-            return stringify(value);
-        }
-        return value;
-    });    
 
-    if(data.length) {
-      this.state.data.push(...data);
+    const resultData = JSON.parse(result, reviver);
+    if(!resultData.length) {
+      this.state.canFetch = false;
     } else {
-      this.state.canFetch = false;    
-    }    
+      data.push(...resultData);
+    }
     this.state.isFetching = false;
   }
+
+  prepareQuery(query) {
+    query = query.trim().toLowerCase();
+    return query;
+  }
+
+  //local filtering
+  updateFilter(query) {
+    if(query == null) {
+      this.filterRegexps = null;
+      return;
+    }
+    query = this.prepareQuery(query);
+    this.filterRegexps = [];
+    const transliteratedQuery = transliterate(query);
+    const reversedQuery = langReverse(query);
+    const reversedTransliteratedQuery = langReverse(transliteratedQuery);
+    this.filterRegexps.push(new RegExp('.*' + query + '.*'));
+    this.filterRegexps.push(new RegExp('.*' + transliteratedQuery + '.*'));
+    this.filterRegexps.push(new RegExp('.*' + reversedQuery + '.*'));
+    this.filterRegexps.push(new RegExp('.*' + reversedTransliteratedQuery + '.*'));
+  }
+
+  isRowValid(row) {
+    if(this.filterRegexps == null) {
+      return true;
+    }
+    const { filterFields } = this.props;
+    for(const field of filterFields) {
+      if(!row.data.hasOwnProperty(field) || row.data[field] == null) {
+        continue;
+      }
+      for(const filterRegexp of this.filterRegexps) {
+        if(filterRegexp.test(row.data[field].toLowerCase())) {
+          return true;
+        }
+      };
+    }
+  }
+
+  //server filtering mode
+  _isInRemoteSearch() {
+    return this.state.dataState === Store.DATA_STATE_REMOTE;
+  }
+
+  _setRemoteSearch(query = null) {
+    this.state.canFetch = true;
+    this.state.dataState = query == null ? Store.DATA_STATE_LOCAL : Store.DATA_STATE_REMOTE;
+    this.state.query = query;
+    if(query == null) {
+      this.state.data[Store.DATA_STATE_REMOTE] = [];
+    }
+  }
 }
+
+Store.DATA_STATE_LOCAL = 'local';
+Store.DATA_STATE_REMOTE = 'remote';
 
 export default Store;

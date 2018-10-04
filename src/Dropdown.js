@@ -1,48 +1,62 @@
+import Component from './Component';
 import './styles/Dropdown.css';
 import crossIcon from './images/cross.svg';
 import plusIcon from './images/plus.svg';
-import { showElement, hideElement, toggleElement } from './common';
+import { showElement, hideElement, isNodeInView } from './common';
+import * as Constants from './constants';
 
-class Dropdown {
-  constructor(props) {
-    const { id, node = null } = props;
-    this.props = props;
-    
+class Dropdown extends Component {
+  constructor({
+    id,
+    store,
+    placeholder = 'Введите имя друга',
+    multiple = false,
+    needAvatars = true,
+    node = null
+  }) {
+    super();
+    this.props = {
+      id,
+      store,
+      placeholder,
+      multiple,
+      needAvatars,
+      node
+    };
     this.node = node != null ? node : document.getElementById(id);
     this.state = {
-      'selected': new Set(),
-      'canFetch': true
+      selected: new Set(),
+      canFetch: true,
+      store,
+      current: null,
+      inputFocused: false,
+      inFetch: false
     };
 
     this.inputContainerRef = null;
     this.inputRef = null;
     this.datalistRef = null;
+    this.inputTimeout = null;
+    this.loadingRef = null;
   }
 
   init() {
-    this.render();
-    this.subscribe();
-    this.refresh();
-  }
-
-  render() {
-    console.log('Render: ', this.node, this.props);
     if(this.node == null) {
       return;
     }
+
     const container = document.createDocumentFragment();
-    const { id, store, placeholder, multiple } = this.props;
+    const { id, placeholder, multiple } = this.props;
 
     const inputContainer = document.createElement('div');
     inputContainer.classList.add('input-container');
     inputContainer.setAttribute('id', `${id}_input_container`);
     const input = document.createElement('input');
-    input.setAttribute('id', `${id}_input`);    
+    input.setAttribute('id', `${id}_input`);
     input.classList.add('input');
     if(placeholder) {
       input.setAttribute('placeholder', placeholder);
     }
-    
 
     inputContainer.appendChild(input);
     container.appendChild(inputContainer);
@@ -50,8 +64,6 @@ class Dropdown {
     this.inputContainerRef = inputContainer;
     this.inputRef = input;
 
-    this.renderData();
-    
     if(multiple) {
       const addInfo = this.renderInfo({
         type: 'add',
@@ -60,8 +72,9 @@ class Dropdown {
         icon: plusIcon,
         callback: event => {
           event.stopPropagation();
-          this.toggleAdd(false);
-          showElement(this.datalistRef);
+          this.setState({
+            inputFocused: true
+          });
         }
       });
       this.inputContainerRef.insertBefore(addInfo, this.inputRef);
@@ -69,57 +82,172 @@ class Dropdown {
       hideElement(addInfo);
     }
 
+    const datalist = document.createElement('div');
+    datalist.setAttribute('id', `${id}_data`);
+    datalist.classList.add('data');
+    datalist.classList.add('hidden');
+    this.datalistRef = datalist;
+
     this.node.appendChild(container);
+    this.node.appendChild(datalist);
     this.node.classList.add('dropdown');
+
+    this.loadingRef = document.createElement('div');
+    this.loadingRef.classList.add('row', 'loading');
+    this.loadingRef.innerHTML = 'Идет загрузка данных ...';
+
+    this.render();
+    this.fetchData();
+    this.subscribe();
+    this.refresh();
   }
 
-  async renderData() {    
-    const { canFetch } = this.state;
+  render(prevState = null) {
+    if(prevState == null) {
+      return;
+    }
+    const { inputFocused } = this.state;
+    if(inputFocused) {
+      this.inputRef.focus();
+    }
+    const fieldsChanged = [];
+    for(const [key, value] of Object.entries(this.state)) {
+      if(value !== prevState[key]) {
+        fieldsChanged.push(key);
+      }
+    }
+
+    if(!fieldsChanged.length) {
+      return;
+    }
+
+    this.renderCurrent(prevState);
+    const { selected, inFetch } = this.state;
+    const {
+      inputFocused: prevInputFocused,
+      selected: prevSelected,
+      inFetch: prevInFetch
+    } = prevState;
+    if(inputFocused !== prevInputFocused) {
+      this.toggleAdd(!inputFocused);
+      showElement(this.datalistRef, true, inputFocused);
+      const showInput = inputFocused || !this.state.selected.size;
+      showElement(this.inputRef, false, showInput);
+      if(inputFocused) {
+        this.inputRef.focus();
+      }
+    }
+    if(selected !== prevSelected) {
+      this.toggleAdd(!inputFocused);
+      const showInput = inputFocused || !this.state.selected.size;
+      showElement(this.inputRef, false, showInput);
+    }
+
+    if(inFetch !== prevInFetch) {
+      if(inFetch) {
+        if(this.loadingRef.parentNode !== this.datalistRef) {
+          this.datalistRef.appendChild(this.loadingRef);
+        }
+      } else {
+        if(this.loadingRef.parentNode === this.datalistRef) {
+          this.datalistRef.removeChild(this.loadingRef);
+        }
+      }
+    }
+    this.refresh();
+  }
+
+  renderCurrent(prevState) {
+    const { current } = this.state;
+    const { current: prevCurrent } = prevState;
+    if(current !== prevCurrent) {
+      if(prevCurrent != null) {
+        if(prevCurrent < this.datalistRef.childElementCount) {
+          const prevRow = this.datalistRef.childNodes[prevCurrent];
+          if(prevRow) {
+            prevRow.classList.remove('current');
+          }
+        }
+      }
+
+      if(current == null) {
+        const newCurrent = prevCurrent - 1;
+        if(newCurrent >= 0) {
+          this.setState({
+            current: newCurrent
+          });
+        }
+        return
+      }
+      const row = this.datalistRef.childNodes[current];
+      if(row) {
+        row.classList.add('current');
+
+        if(!isNodeInView(row)) {
+          row.scrollIntoView(current == null || current < prevCurrent);
+        }
+      }
+    }
+  }
+
+  async fetchData() {
+    const { canFetch, inFetch } = this.state;
     if(!canFetch) {
       return;
     }
-    if(!this.datalistRef) {
-      const { id } = this.props;
-      const datalist = document.createElement('div');
-      datalist.setAttribute('id', `${id}_data`);
-      datalist.classList.add('data');
-      datalist.classList.add('hidden');
-      this.inputContainerRef.appendChild(datalist);
-      this.datalistRef = datalist;
+
+    if(inFetch) {
+      console.log("inFetch");
+      return;
     }
-    const { store } = this.props;    
+
+    const { store } = this.state;
     if(!store) {
       return;
     }
 
-    const listItemsCount = this.datalistRef.childElementCount;    
-    let index = listItemsCount;
-    const range = await store.getRange(index);
-    console.log('renderData from index: ' + index);
-    if(!range) {
-      this.state.canFetch = false;      
+    let index = 0;
+    const lastRow = this.datalistRef.lastElementChild;
+    if(lastRow) {
+      index = this.datalistRef.childElementCount;
+      //Number(lastRow.getAttribute('index')) + 1;
+    }
+    const query = this.inputRef.value.length ? this.inputRef.value : null;
+    this.setState({
+      inFetch:true
+    });
+    const range = await store.getRange(index, query);
+    if(!range.length) {
+      this.setState({
+        canFetch: false,
+        inFetch: false
+      });
       return;
     }
+
     for(const value of range) {
-      this.datalistRef.appendChild(this.renderUser(index++, value));        
-    }    
+      if(this.state.selected.has(value.data.id)) {
+        continue;
+      }
+      this.datalistRef.appendChild(this.renderUser(value.index, value.data));
+    }
+    this.setState({
+      inFetch:false
+    });
   }
 
-  renderUser(index, { data }) {
-    const { id, name, surname, workplace, avatarUrl } = data;
+  renderUser(index, { id, name, surname, workplace, avatarUrl }) {
+    const { id: dropdownId, needAvatars }  = this.props;
     const userContainer = document.createElement('div');
     userContainer.setAttribute('index', index);
-    userContainer.setAttribute('id', id);
+    userContainer.setAttribute('id', `${dropdownId}_row_${id}`);
+    userContainer.setAttribute('user-id', id);
     userContainer.classList.add('row');
 
-    const avatarNode = document.createElement('div');
-    avatarNode.classList.add('avatar');
-    avatarNode.innerHTML = avatarUrl;
-
-    const userInfoNode = document.createElement('div');    
+    const userInfoNode = document.createElement('div');
     userInfoNode.classList.add('user-info');
-    
-    
+
+
     const fullNameNode = document.createElement('span');
     fullNameNode.classList.add('full-name');
     fullNameNode.innerHTML =  `${id} ${name} ${surname}`;
@@ -130,8 +258,14 @@ class Dropdown {
 
     userInfoNode.appendChild(fullNameNode);
     userInfoNode.appendChild(workplaceNode);
-    userContainer.appendChild(avatarNode);
+    if(needAvatars) {
+      const avatarNode = document.createElement('div');
+      avatarNode.classList.add('avatar');
+      avatarNode.innerHTML = avatarUrl;
+      userContainer.appendChild(avatarNode);
+    }
     userContainer.appendChild(userInfoNode);
+
     return userContainer;
   }
 
@@ -152,7 +286,7 @@ class Dropdown {
     infoNode.classList.add(type);
 
     if(label) {
-      const labelNode = document.createElement('span'); 
+      const labelNode = document.createElement('span');
       labelNode.innerHTML = label;
       infoNode.appendChild(labelNode);
     }
@@ -176,30 +310,91 @@ class Dropdown {
     return infoNode;
   }
 
+  clear() {
+    while (this.datalistRef.firstChild) {
+      this.datalistRef.removeChild(this.datalistRef.firstChild);
+    }
+  }
+
+  setCurrent(index) {
+    let current = index;
+    if (index >= this.datalistRef.childElementCount) {
+      current = this.datalistRef.childElementCount - 1;
+    } else if( index < 0 )  {
+      current = 0;
+    }
+    this.setState({
+      current
+    });
+  }
+
   subscribe() {
     const { multiple } = this.props;
-    document.addEventListener('click', event => {
-      event.stopPropagation();
-      this.toggleAdd(true);
-      hideElement(this.datalistRef);
+    this.inputRef.addEventListener('input', event => {
+      //add input timeout for short words too reduce query counts
+      //todo remove timeout
+      if(this.inputTimeout) {
+        clearTimeout(this.inputTimeout);
+        this.inputTimeout = null;
+      }
+      this.inputTimeout = setTimeout(() => {
+        this.refetchData();
+      }, 500);
     });
+
+    this.inputRef.addEventListener('blur', event => {
+      this.setState({
+        inputFocused: false
+      });
+    });
+
+    this.inputRef.addEventListener('keydown', event => {
+      //console.log(event.keyCode);
+      const keyCode = Number(event.keyCode);
+      if(keyCode === Constants.KEY_ENTER) {
+        const { current } = this.state;
+        if(current == null) {
+          return;
+        }
+        this.select(this.datalistRef.childNodes[current]);
+        return;
+      }
+
+      if(!Constants.NAVIGATION_KEYS.includes(keyCode)) {
+        return;
+      }
+      const { current } = this.state;
+      let nextCurrent = current == null ? -1 : current;
+      if (keyCode == Constants.KEY_UP ||
+        keyCode == Constants.KEY_DOWN) {
+        nextCurrent += keyCode == Constants.KEY_DOWN ? 1 : -1;
+      } else if (keyCode == Constants.KEY_PAGE_UP ||
+        keyCode == Constants.KEY_PAGE_DOWN) {
+        nextCurrent += keyCode == Constants.KEY_PAGE_DOWN ? 10 : -10;
+      } else if (keyCode == Constants.KEY_PAGE_HOME) {
+        nextCurrent = 0;
+      } else if (keyCode == Constants.KEY_PAGE_END) {
+        nextCurrent = this.datalistRef.childElementCount - 1;
+      }
+      this.setCurrent(nextCurrent);
+    });
+
     this.inputContainerRef.addEventListener('click', event => {
       event.stopPropagation();
       if(!multiple && this.state.selected.size) {
         return;
       }
-      showElement(this.datalistRef);
+      this.setState({
+        inputFocused: true
+      });
     });
-    this.datalistRef.addEventListener('click', event => {
-      event.stopPropagation();
-      let { target } = event;      
+
+    this.datalistRef.addEventListener('mousedown', event => {
+      let { target } = event;
       target = target.closest('.row');
       if(target) {
-        // found
-        const index = target.getAttribute('index');
-        this.select(index);        
+        this.select(target);
       }
-      hideElement(this.datalistRef);
     });
 
     this.datalistRef.addEventListener('scroll', event => {
@@ -207,56 +402,65 @@ class Dropdown {
         return;
       }
       let { target } = event;
-      const scrollPosition = target.scrollHeight - target.scrollTop - target.offsetHeight;
-      if(scrollPosition < 1000) {
-          console.log(scrollPosition);
-          this.renderData();
-      }      
-    });    
+      //scroll to bottom
+      const scrollPosition = target.scrollHeight - (target.scrollTop + target.offsetHeight);
+      if(scrollPosition < Dropdown.SCROLL_FETCH_POS) {
+        if(!this.state.inFetch) {
+          this.fetchData();
+        }
+      }
+    });
   }
 
-  select(index) {
+  select(row) {
+    if(!row) {
+      console.error("Can't select row, ", row);
+      return;
+    }
     const { store, multiple } = this.props;
-    const user = store.get(index);
+
+    const id = Number(row.getAttribute('user-id'));
+    const user = store.get(row.getAttribute('index'));
     const label = `${user.data.name} ${user.data.surname}`;
     const info = this.renderInfo({
       type: 'selected',
       action: 'remove',
       icon: crossIcon,
-      label,      
+      label,
       actionCallback: event => {
         event.stopPropagation();
         info.remove();
-        this.state.selected.delete(index);
-        showElement(this.datalistRef.childNodes[index]);        
-        
-        this.toggleAdd(true);
-        hideElement(this.datalistRef);
-        this.refresh();
+        const selected = new Set(this.state.selected);
+        selected.delete(id);
+        this.refetchData();
+        this.setState({
+          inputFocused: false,
+          selected
+        });
       }
-    })    
+    })
 
     const target = multiple ? this.addInfoRef : this.inputRef;
     this.inputContainerRef.insertBefore(info, target);
-    hideElement(this.datalistRef.childNodes[index]);
-    this.state.selected.add(index);
-    this.toggleAdd(true);
-    this.refresh();
+    const selected = new Set(this.state.selected);
+    selected.add(id);
+    row.remove();
+    this.setState({
+      current: null,
+      inputFocused: false,
+      selected
+    });
   }
 
   toggleAdd(show = true) {
     const { multiple } = this.props;
+    if(!multiple) {
+      return;
+    }
     if(show && !this.inputRef.value.length && this.state.selected.size) {
-      if(multiple) {
-        showElement(this.addInfoRef);
-      }
-      hideElement(this.inputRef);
+      showElement(this.addInfoRef);
     } else {
-      if(multiple) {
-        hideElement(this.addInfoRef);
-      }
-      showElement(this.inputRef);
-      this.inputRef.focus();
+      hideElement(this.addInfoRef);
     }
     this.refresh();
   }
@@ -264,12 +468,30 @@ class Dropdown {
   refresh() {
     if(this.timerID) {
       clearTimeout(this.timerID);
-    }    
+    }
     this.timerID = setTimeout(() => {
       this.datalistRef.style.top = `${this.inputContainerRef.offsetHeight}px`;
       this.timerID = null;
     }, 0);
   }
+
+  getRow(id) {
+    const { id: dropdownId }  = this.props;
+    return document.getElementById(`${dropdownId}_row_${id}`);
+  }
+
+  async refetchData() {
+    this.clear();
+    this.state.store.reset();
+    this.setState({
+      canFetch: true,
+      current: null
+    });
+    await this.fetchData();
+    this.datalistRef.scrollTo(0,0);
+  }
 }
+
+Dropdown.SCROLL_FETCH_POS = 1000;
 
 export default Dropdown;

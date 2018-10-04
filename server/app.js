@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const querystring = require('querystring');
 const Core = require('./Core');
 
 const app = express();
@@ -9,30 +8,32 @@ app.set('view engine', 'html');
 
 const LOAD_PACK_SIZE = 1000;
 
-app.get('/', function (req, res) {
-  Core.getData({
-    startIndex: 0, 
-    count: LOAD_PACK_SIZE
-  }).then(data => {
+app.get('/', function (req, res) {  
+  loadUsers(0, LOAD_PACK_SIZE).then(data => {
     res.render('index', {
-      data: Core.parseClientData(data)
+      data
     });
-  });
+  });  
 });
 app.get('/users', function (req, res) {
   res.setHeader('Content-Type', 'application/json');  
   const {
-    startIndex = 0,
-    packCount = LOAD_PACK_SIZE
+    startIndex = null,
+    packCount = LOAD_PACK_SIZE,
+    query = null
   } = req.query;
-  loadUsers(Number(startIndex), Number(packCount)).then(data => {
+  if(startIndex == null) {
+    res.send('Start index is not set');
+    return;
+  }
+  loadUsers(Number(startIndex), Number(packCount), query).then(data => {
     res.send(data);
   });
 });
 
-async function loadUsers(startIndex, count) {
-  console.log('LOAD USERS START ', startIndex, count);
-  const data = await Core.getData({startIndex, count});
+async function loadUsers(startIndex, count, query = null) {
+  console.log('LOAD USERS START ', startIndex, count, query);
+  const data = await Core.getData({startIndex, count, query});
   console.log('LOAD USERS ', data.length);
   return Core.parseClientData(data);
 }

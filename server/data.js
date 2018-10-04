@@ -2,9 +2,9 @@ const Constants = require('./constants');
 const User = require('./User');
 const Avatars = require('@dicebear/avatars').default;
 const MaleSprites = require('@dicebear/avatars-male-sprites').default;
-const FemaleSprites = require('@dicebear/avatars-female-sprites').default;
 const svgson = require('svgson-next').default;
-
+const FemaleSprites = require('@dicebear/avatars-female-sprites').default;
+const transliterate = require('./common').transliterate;
 
 
 const GENDER_MALE = 0;
@@ -76,10 +76,11 @@ async function getAvatar(id, gender) {
 }
 
 async function generateTestUser(i) {
+  const needTransliterate = getRandomInt(0, 1);
   const gender = getRandomInt(0, 1);
   const avatar = await getAvatar(i, gender);
   const userValues = {
-    [Constants.USER_FIELD_ID]: i,
+    [Constants.USER_FIELD_ID]: i+10000,
     [Constants.USER_FIELD_GENDER]: gender,
     [Constants.USER_FIELD_AVATAR_URL]: avatar
   };
@@ -87,6 +88,12 @@ async function generateTestUser(i) {
     if (field === Constants.USER_FIELD_ID ||
       field === Constants.USER_FIELD_GENDER ||
       field === Constants.USER_FIELD_AVATAR_URL) {
+      continue;
+    }
+    if(field === Constants.USER_FIELD_FULLNAME) {
+      userValues[field] = 
+        userValues[Constants.USER_FIELD_NAME] + ' ' +
+        userValues[Constants.USER_FIELD_SURNAME];
       continue;
     }
     let value = null;
@@ -101,10 +108,14 @@ async function generateTestUser(i) {
       }
     } else {
       if (field === Constants.USER_FIELD_USER_URL) {
-        value = `id${i}`;
+        value = `id${userValues[Constants.USER_FIELD_ID]}`;
       }
     }
-    userValues[field] = value;
+    if((field === Constants.USER_FIELD_NAME || 
+      field === Constants.USER_FIELD_SURNAME) && needTransliterate) {
+        value = transliterate(value);
+    }
+    userValues[field] = value;    
   }
 
   return new User(userValues);
@@ -113,11 +124,14 @@ async function generateTestUser(i) {
 async function generateTestData(startIndex = 0, count = 10000) {
   const data = [];
   let i = startIndex;
-  while (i < count) {
-    const user = await generateTestUser(++i);
+
+  while ((i-startIndex) < count) {
+    const user = await generateTestUser(i++);
     data.push(user);
   }
   return data;
 };
 
-module.exports = generateTestData();
+module.exports = function(...rest) {
+  return generateTestData(...rest)
+};

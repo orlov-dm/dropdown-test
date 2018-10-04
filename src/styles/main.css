@@ -49,11 +49,11 @@ button:focus {
 }
 
 .hidden {
-  display: none !important;
+  visibility: hidden !important;
 }
 
-.visible {
-  display: block !important;
+.hidden-block {
+  display: none !important;
 }
 
 .icon,

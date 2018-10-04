@@ -7,10 +7,11 @@ import 'normalize.css';
 import Dropdown from './Dropdown';
 import Store from './Store';
 import './styles/main.css';
+import * as Constants from '../server/constants';
 
+console.log(Constants);
 
-
-function getData() {
+function getFavouriteData() {
     // Read the JSON-formatted data from the DOM.
     const element = document.getElementById('user_data');
     const data = JSON.parse(element.textContent, function(key, value) {
@@ -24,9 +25,26 @@ function getData() {
     return data;
 };
 
-const packCount = 50;
-const data = getData();
-const store = new Store({data, packCount});
+
+const filterFields = [
+    Constants.USER_FIELD_NAME,
+    Constants.USER_FIELD_SURNAME,
+    Constants.USER_FIELD_FULLNAME,
+    Constants.USER_FIELD_WORKPLACE    
+];
+const store = new Store({
+    data: getFavouriteData(),
+    packCount: 50,
+    packFetchCount: 1000,
+    filterFields,
+    url: '/users',
+    reviver: function(key, value) {
+        if(key === 'avatarUrl') {
+            return stringify(value);
+        }
+        return value;
+    }
+});
 
 (new Dropdown({
     id: 'dropdown',
@@ -37,7 +55,8 @@ const store = new Store({data, packCount});
 
 (new Dropdown({
     id: 'dropdown_single',
-    store,
+    store,    
     placeholder: 'Введите имя друга',
-    multiple: false
+    multiple: false,
+    needAvatars: false
 })).init();
