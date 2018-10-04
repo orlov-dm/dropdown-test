@@ -2,7 +2,7 @@ const Constants = require('./constants');
 const generateData = require('./data');
 const { transliterate, langReverse } = require('./common');
 
-generateData(0, 10000).then(generatedData => Core.setData(generatedData));
+generateData(0, 2000).then(generatedData => Core.setData(generatedData));
 
 class Core {
   static setData(data) {
@@ -21,17 +21,16 @@ class Core {
     if (startIndex < 0) {
       return 'Wrong index';
     }
-    let currentCount = 0;
     const result = [];
     const filterRegexps = Core.getFilters(query);
     for(let i = startIndex; i < data.length; ++i) {
       const row = data[i];
       if(!Core.isRowValid(row, Constants.FILTER_FIELDS, filterRegexps)) {
-        ++currentCount;
         continue;
       }
+      row.index = i;
       result.push(row);
-      if(++currentCount >= count) {
+      if(result.length >= count) {
         break;
       }
     }
@@ -44,11 +43,11 @@ class Core {
       return value;
     });
   }
-  
+
   static isRowValid(row, filterFields, filterRegexps) {
     if(filterRegexps == null) {
       return true;
-    }    
+    }
     for(const field of filterFields) {
       if(!row.data.hasOwnProperty(field) || row.data[field] == null) {
         continue;
@@ -62,13 +61,13 @@ class Core {
         if(field === Constants.USER_FIELD_USER_URL) {
           break;
         }
-      };      
+      };
     }
   }
 
   static getFilters(query = null) {
     if(query == null) {
-      return null;      
+      return null;
     }
     query = Core.prepareQuery(query);
     const filterRegexps = [];

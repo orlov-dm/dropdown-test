@@ -19,8 +19,8 @@
     border-radius: 3px;
     margin: 2px;
     white-space: nowrap;
-    display: flex; 
-    vertical-align: middle; 
+    display: flex;
+    vertical-align: middle;
     line-height: normal;
     padding: 4px;
 
@@ -102,12 +102,17 @@
     color: var(--hover-text-color);
 }
 
+.dropdown .data .row.loading {
+    color: var(--main-color);
+    font-weight: bold;
+}
+
 .dropdown .data .avatar {
     padding-right: 1em;
 }
 .dropdown .data .avatar svg {
     width: 30px;
-    height: 30px;    
+    height: 30px;
     border: 1px solid transparent;
     border-radius: 10em;
     background-color: var(--background-color);
