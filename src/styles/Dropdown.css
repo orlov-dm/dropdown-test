@@ -1,3 +1,12 @@
+/* TODO use postcss to define vars in main.css and import here */
+$main-color: rgb(81, 129, 184);
+$light-main-color: rgb(119, 165, 218);
+$secondary-color: rgb(218, 226, 234);
+$light-secondary-color: white;
+$border-color: rgb(211, 217, 222);
+$background-color: rgb(240, 242, 245);
+$text-color: rgb(101, 101, 101);
+$hover-text-color: rgb(101, 101, 101);
 
 .dropdown {
     position: relative;
@@ -6,15 +15,15 @@
 .dropdown .input-container {
     min-height: 2em;
     width: 30em;
-    border: 1px solid var(--border-color);
-    background-color: var(--light-secondary-color);
+    border: 1px solid $border-color;
+    background-color: $light-secondary-color;
     display: flex;
     flex-wrap: wrap;
 }
 
 .dropdown .input-container .info {
-    background-color: var(--main-color);
-    color: var(--light-secondary-color);
+    background-color: $main-color;
+    color: $light-secondary-color;
     border: 1px solid transparent;
     border-radius: 3px;
     margin: 2px;
@@ -28,15 +37,15 @@
 }
 
 .dropdown .input-container .info.add {
-    background-color: var(--secondary-color);
-    color: var(--main-color);
+    background-color: $secondary-color;
+    color: $main-color;
     cursor: pointer;
 }
 
 .dropdown .input-container .info .action {
     border: none;
     background: none;
-    color: var(--light-secondary-color);
+    color: $light-secondary-color;
     padding: 0;
     cursor: pointer;
 }
@@ -46,19 +55,19 @@
 }
 
 .dropdown .input-container .info .action svg path {
-    fill: var(--secondary-color);
+    fill: $secondary-color;
 }
 
 .dropdown .input-container .selected .action:hover svg path {
-    fill: var(--light-secondary-color);
+    fill: $light-secondary-color;
 }
 
 .dropdown .input-container .info .action.add svg path {
-    fill: var(--light-main-color);
+    fill: $light-main-color;
 }
 
 .dropdown .input-container .info .action.add:hover svg path {
-    fill: var(--main-color);
+    fill: $main-color;
 }
 
 .dropdown .input-container .input {
@@ -76,12 +85,12 @@
     /* top: 2em; */
     left: 0;
     width: 30em;
-    border: 1px solid var(--border-color);
+    border: 1px solid $border-color;
     border-top: 0;
     max-height: 20em;
     overflow-y: auto;
     z-index: 1000;
-    background-color: var(--background-color);
+    background-color: $background-color;
 }
 
 .dropdown .data .row {
@@ -94,16 +103,16 @@
 }
 
 .dropdown .data .row:not(:last-child) {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid $border-color);
 }
 .dropdown .data .row.current,
 .dropdown .data .row:hover {
-    background-color: var(--background-color);
-    color: var(--hover-text-color);
+    background-color: $background-color);
+    color: $hover-text-color);
 }
 
 .dropdown .data .row.loading {
-    color: var(--main-color);
+    color: $main-color;
     font-weight: bold;
 }
 
@@ -115,7 +124,7 @@
     height: 30px;
     border: 1px solid transparent;
     border-radius: 10em;
-    background-color: var(--background-color);
+    background-color: $background-color;
 }
 
 .dropdown .data .user-info {
@@ -126,6 +135,6 @@
 }
 
 .dropdown .data .user-info .full-name {
-    color: var(--main-color);
+    color: $main-color;
     font-weight: bold;
 }

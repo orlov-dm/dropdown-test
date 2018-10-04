@@ -35,13 +35,19 @@ module.exports = {
             }
           },
           { 
-            loader: 'postcss-loader', options: {
-              ident: 'postcss',
-              plugins: () => [
-                postcssPresetEnv(/* pluginOptions */),
-                postcssCustomProperties(/* pluginOptions */),                
-              ]
-            } 
+            loader: 'postcss-loader', 
+            options: {
+              config: {
+                path: __dirname + '/postcss.config.js'
+              }
+            },
+            // options: {
+            //   ident: 'postcss',
+            //   plugins: () => [
+            //     postcssPresetEnv(/* pluginOptions */),
+            //     postcssCustomProperties(/* pluginOptions */),                
+            //   ]
+            // } 
           }
         ]
       },      
