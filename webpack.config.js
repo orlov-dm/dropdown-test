@@ -57,7 +57,7 @@ module.exports = {
       }
     ]
   },
-  watch: true,
+  watch: false,
   watchOptions: {
     aggregateTimeout: 300 // The default
   },

@@ -31,7 +31,8 @@
     "build": "webpack --mode=production",
     "watch": "webpack --watch",
     "server": "nodemon server/app.js",
-    "debug": "node --nolazy --inspect-brk=8888 server/app.js"
+    "debug": "node --nolazy --inspect-brk=8888 server/app.js",
+    "heroku-postbuild": "webpack -p"
   },
   "dependencies": {
     "@dicebear/avatars": "^2.0.4",
