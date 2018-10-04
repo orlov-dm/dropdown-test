@@ -488,7 +488,7 @@ class Dropdown extends Component {
       current: null
     });
     await this.fetchData();
-    this.datalistRef.scrollTo(0,0);
+    this.datalistRef.scrollTop = 0;
   }
 }
 

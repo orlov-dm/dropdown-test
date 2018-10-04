@@ -1,4 +1,5 @@
 import "@babel/polyfill";
+import 'whatwg-fetch';
 import runPolyfils from './polyfills';
 runPolyfils();
 import { stringify } from 'svgson-next';
@@ -30,7 +31,7 @@ const filterFields = [
     Constants.USER_FIELD_NAME,
     Constants.USER_FIELD_SURNAME,
     Constants.USER_FIELD_FULLNAME,
-    Constants.USER_FIELD_WORKPLACE    
+    Constants.USER_FIELD_WORKPLACE
 ];
 const store = new Store({
     data: getFavouriteData(),
@@ -55,7 +56,7 @@ const store = new Store({
 
 (new Dropdown({
     id: 'dropdown_single',
-    store,    
+    store,
     placeholder: 'Введите имя друга',
     multiple: false,
     needAvatars: false
