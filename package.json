@@ -28,6 +28,7 @@
     "whatwg-fetch": "^3.0.0"
   },
   "scripts": {
+    "start": "node server/app.js",
     "build": "webpack --mode=production",
     "watch": "webpack --watch",
     "server": "nodemon server/app.js",
