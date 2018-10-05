@@ -23,17 +23,20 @@ class Core {
     }
     const result = [];
     const filterRegexps = Core.getFilters(query);
+    let validRows = 0;
     for(let i = startIndex; i < data.length; ++i) {
       const row = data[i];
       if(!Core.isRowValid(row, Constants.FILTER_FIELDS, filterRegexps)) {
-        continue;
+        result.push(undefined);         
+      } else {
+        row.index = i;
+        result.push(row);
+        ++validRows;
       }
-      row.index = i;
-      result.push(row);
-      if(result.length >= count) {
+      if(validRows >= count) {
         break;
       }
-    }
+    }    
     return result;
   }
 

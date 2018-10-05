@@ -61,45 +61,41 @@ class Store {
     if(!this.state.canFetch || this.state.isFetching) {
       return false;
     }
-    // if(this._isInRemoteSearch()) {
-    //   return true;
-    // }
     const { packCount } = this.props;
     const data = this.getData();
     return index >= (data.length - packCount * 2);
   }
 
   async getRange(startIndex, query = null) {
-    if(!this.state.canFetch) {
-      return [];
-    }
     const { packCount } = this.props;
     const data = this.getData();
-    if(this.shouldFetch(startIndex + packCount)) {
+    const index = startIndex;
+    if(this.shouldFetch(index + packCount)) {
       await this.dataFetch();
     }
     this.updateFilter(this._isInRemoteSearch() ? null : query);
-    const isRowValid = this.isRowValid.bind(this);
     const length = data.length;
 
     const range = [];
-    if (startIndex < length) {
-      for(let i = startIndex; range.length < packCount && i < data.length; ++i) {
+    if (index < length) {
+      for(let i = index; range.length < packCount && i < data.length; ++i) {
         const row = data[i];
-        if(!isRowValid(row)) {
+        if(!this.isRowValid(row)) {
           ++i;
           continue;
         }
         range.push(row);
       }
     }
-    console.log(startIndex, range.length);
-    if(startIndex === 0 && 
+    console.log(index, range.length);
+    //enter remote search when no data in local storage
+    if(index === 0 && 
       query != null && !range.length && !this._isInRemoteSearch()) {
       console.log('Remote search');
       this._setRemoteSearch(query);
       return this.getRange(0, query);
-    }
+    }    
+
     return range;
   }
 
@@ -148,6 +144,9 @@ class Store {
   }
 
   isRowValid(row) {
+    if(row == null) {
+      return false;
+    }
     if(this.filterRegexps == null) {
       return true;
     }
