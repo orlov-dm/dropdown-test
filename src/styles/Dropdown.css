@@ -8,6 +8,7 @@ $border-color: rgb(211, 217, 222);
 $background-color: rgb(240, 242, 245);
 $text-color: rgb(101, 101, 101);
 $hover-text-color: rgb(101, 101, 101);
+$open-size: 24px;
 
 .dropdown {
     position: relative;
@@ -19,9 +20,19 @@ $hover-text-color: rgb(101, 101, 101);
     min-height: 2em;
     width: 30em;
     border: 1px solid $border-color;
-    background-color: $light-secondary-color;
-    display: flex;
-    flex-wrap: wrap;
+    background-color: $light-secondary-color;    
+}
+
+.dropdown .input-container .action.open {
+    float: right;
+    padding: 5px;  
+    max-width: $open-size;
+    max-height: $open-size;
+    cursor: pointer;
+}
+
+.dropdown .input-container .action.open {
+    fill: $main-color;
 }
 
 .dropdown .input-container .info {
@@ -31,8 +42,8 @@ $hover-text-color: rgb(101, 101, 101);
     border-radius: 3px;
     margin: 2px;
     white-space: nowrap;
-    display: flex;
-    vertical-align: middle;
+    display: inline-flex;
+    /* vertical-align: middle; */
     line-height: normal;
     padding: 4px;
 
@@ -79,7 +90,7 @@ $hover-text-color: rgb(101, 101, 101);
 
     border: 0;
     flex-grow: 1;
-    width: 100%;
+    width: calc(100% - $open-size);
 }
 
 .dropdown .data {

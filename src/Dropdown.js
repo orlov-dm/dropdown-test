@@ -1,6 +1,7 @@
 import Component from './Component';
 import crossIcon from './images/cross.svg';
 import plusIcon from './images/plus.svg';
+import arrowDownIcon from './images/arrow-down.svg';
 
 import { showElement, hideElement, isNodeInView } from './common';
 import * as Constants from './constants';
@@ -58,8 +59,16 @@ class Dropdown extends Component {
     input.classList.add('input');
     if(placeholder) {
       input.setAttribute('placeholder', placeholder);
-    }
-    
+    }        
+
+    const openNode = document.createElement('i');
+    openNode.classList.add('action');
+    openNode.classList.add('open');
+    openNode.classList.add('icon');
+    openNode.innerHTML = arrowDownIcon;
+    this.openNodeRef = openNode;
+
+    inputContainer.appendChild(openNode);
     inputContainer.appendChild(input);
     container.appendChild(inputContainer);    
 
@@ -73,7 +82,7 @@ class Dropdown extends Component {
         label: 'Добавить',
         icon: plusIcon,
         callback: event => {
-          event.stopPropagation();
+          //event.stopPropagation();
           this.setState({
             inputFocused: true
           });
@@ -133,7 +142,7 @@ class Dropdown extends Component {
     if(inputFocused !== prevInputFocused) {
       this.toggleAdd(!inputFocused);
       showElement(this.datalistRef, true, inputFocused);
-      const showInput = inputFocused || !this.state.selected.size;
+      const showInput = inputFocused || !this.state.selected.size || this.inputRef.value.length;
       showElement(this.inputRef, false, showInput);
       if(inputFocused) {
         this.inputRef.focus();
@@ -346,6 +355,13 @@ class Dropdown extends Component {
     });
 
     this.inputRef.addEventListener('blur', event => {
+      if(this.state.cancelBlur) {
+        this.setState({
+          cancelBlur: false
+        });
+        return;
+      }
+      console.log('blur');
       this.setState({
         inputFocused: false
       });
@@ -383,8 +399,8 @@ class Dropdown extends Component {
       this.setCurrent(nextCurrent);
     });
 
-    this.inputContainerRef.addEventListener('click', event => {
-      event.stopPropagation();
+    this.inputContainerRef.addEventListener('mousedown', event => {
+      //event.stopPropagation();
       if(!multiple && this.state.selected.size) {
         return;
       }
@@ -399,6 +415,13 @@ class Dropdown extends Component {
       if(target) {
         this.select(target);
       }
+    });
+    this.openNodeRef.addEventListener('mousedown', event => {
+      event.stopPropagation();
+      this.setState({
+        inputFocused: !this.state.inputFocused,
+        cancelBlur: true
+      });
     });
 
     this.datalistRef.addEventListener('scroll', event => {
