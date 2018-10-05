@@ -142,7 +142,7 @@ class Dropdown extends Component {
     if(inputFocused !== prevInputFocused) {
       this.toggleAdd(!inputFocused);
       showElement(this.datalistRef, true, inputFocused);
-      const showInput = inputFocused || !this.state.selected.size || this.inputRef.value.length;
+      const showInput = inputFocused || !selected.size || this.inputRef.value.length;
       showElement(this.inputRef, false, showInput);
       if(inputFocused) {
         this.inputRef.focus();
@@ -150,8 +150,12 @@ class Dropdown extends Component {
     }
     if(selected !== prevSelected) {
       this.toggleAdd(!inputFocused);
-      const showInput = inputFocused || !this.state.selected.size;
+      const showInput = inputFocused || !selected.size;
       showElement(this.inputRef, false, showInput);
+      const { multiple } = this.props;
+      if(!multiple) {
+        showElement(this.openNodeRef, false, !selected.size);
+      }
     }
 
     if(inFetch !== prevInFetch) {
@@ -361,7 +365,6 @@ class Dropdown extends Component {
         });
         return;
       }
-      console.log('blur');
       this.setState({
         inputFocused: false
       });
@@ -410,14 +413,17 @@ class Dropdown extends Component {
     });
 
     this.datalistRef.addEventListener('mousedown', event => {
-      let { target } = event;
-      target = target.closest('.row');
+      let { target } = event;      
+      target = target.closest('.row');      
       if(target) {
         this.select(target);
       }
     });
     this.openNodeRef.addEventListener('mousedown', event => {
       event.stopPropagation();
+      if(!multiple && this.state.selected.size) {
+        return;
+      }
       this.setState({
         inputFocused: !this.state.inputFocused,
         cancelBlur: true
